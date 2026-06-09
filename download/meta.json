@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "files": {
+    "HonalaToolkit-Setup-1.1.0.exe": {
+      "label": "Honala Toolkit v1.1 (Setup.exe)",
+      "desc": "Windows 桌面版（GUI + CLI）一键安装包。GUI 功能：模型下拉刷新（ollama list）、Bench 预设、一键命令、GPU 曲线监控（nvidia-smi）。CLI 仍支持：status / models（含 --pull/--run/--remove）/ gpu / tunnels / bench / watch / keepalive。",
+      "badge": "exe",
+      "icon": "🖥️"
+    }
+  }
+}

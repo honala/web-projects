@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>honala games</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://games.honala.xyz/">
+<meta property="og:title" content="honala · Games">
+<meta property="og:description" content="游戏导航：game1 / game2 / game3 / game4">
+<meta property="og:image" content="https://games.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="honala · Games">
+<meta name="twitter:image" content="https://games.honala.xyz/favicon.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#0a0f1f;color:#dce7ff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:min(760px,100%)}
+h1{margin:0 0 10px;font-size:28px}p{margin:0 0 20px;color:#9fb2d9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{display:block;padding:16px;border:1px solid #263554;border-radius:12px;text-decoration:none;color:inherit;background:#111a31;transition:.15s}
+.card:hover{transform:translateY(-2px);border-color:#4b76d1}
+.tag{font-size:12px;color:#8ca4d6;margin-bottom:6px}.title{font-size:18px;font-weight:700}.desc{font-size:13px;color:#a8badf;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>honala games</h1>
+  <p>游戏导航页 · 统一入口</p>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+async function loadDirs() {
+  const r = await fetch("./files/?ts=" + Date.now(), { cache: "no-store" });
+  if (!r.ok) throw new Error("scan failed");
+  const j = await r.json();
+  if (!Array.isArray(j)) return [];
+  return j.filter(x => x && x.type === "directory" && x.name && !x.name.startsWith("."))
+    .map(x => x.name)
+    .sort();
+}
+
+const PRETTY = {
+  game1: { title: "NEON GRID", desc: "赛博塔防" },
+  game2: { title: "回声未寄", desc: "视觉小说" },
+  game3: { title: "Arcane RPG", desc: "回合制魔法 RPG" },
+  game4: { title: "DnD Card Duel", desc: "龙与地下城 · 卡牌对决" },
+};
+
+(async function init(){
+  const grid = document.getElementById("grid");
+  try{
+    const dirs = await loadDirs();
+    if (!dirs.length) {
+      grid.innerHTML = `<div style="color:#9fb2d9">暂无游戏目录</div>`;
+      return;
+    }
+    grid.innerHTML = "";
+    dirs.forEach((d) => {
+      const p = PRETTY[d] || { title: d, desc: "点击进入" };
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = "./" + encodeURIComponent(d) + "/";
+      a.innerHTML = `<div class="tag">${d}</div><div class="title">${p.title}</div><div class="desc">${p.desc}</div>`;
+      grid.appendChild(a);
+    });
+  } catch(e){
+    grid.innerHTML = `<div style="color:#9fb2d9">加载失败</div>`;
+  }
+})();
+</script>
+</body>
+</html>

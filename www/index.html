@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>honala · 主页</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#060810;
+  --surface:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07);
+  --cyan:#00f5ff;
+  --gold:#d4a853;
+  --gold-dim:rgba(212,168,83,0.15);
+  --magenta:#ff2d78;
+  --green:#00ff9d;
+  --text:#c8d4e8;
+  --muted:#4a5568;
+  --glow-cyan:rgba(0,245,255,0.15);
+  --glow-gold:rgba(212,168,83,0.12);
+}
+
+/* ── FIX: overflow-x:clip 不创建滚动容器，不阻断纵向滚动 ── */
+html{
+  scroll-behavior:auto;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;
+  font-weight:300;
+  overflow-x:clip; /* clip 代替 hidden，不产生新滚动容器 */
+  overscroll-behavior:none;
+  cursor:none;
+}
+
+/* ── Custom cursor ── */
+#cursor{
+  position:fixed;width:12px;height:12px;
+  border:1px solid var(--cyan);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width .15s,height .15s,background .15s;
+  mix-blend-mode:screen;will-change:transform;
+}
+#cursor-ring{
+  position:fixed;width:32px;height:32px;
+  border:1px solid rgba(0,245,255,0.3);border-radius:50%;
+  pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s;
+}
+body:has(a:hover,button:hover) #cursor{width:20px;height:20px;background:rgba(0,245,255,0.2)}
+
+/* ── Canvas bg ── */
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:0.6;pointer-events:none}
+
+/* ── Scanlines ── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
+  animation:scanMove 8s linear infinite;
+}
+@keyframes scanMove{from{background-position:0 0}to{background-position:0 100px}}
+
+/* ── Noise ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+
+/* ── Main layout ── */
+main{position:relative;z-index:2}
+
+/* ══ HERO ══ */
+#hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px;position:relative;text-align:center;
+  overflow:hidden; /* FIX: 限制 rune-ring 溢出 */
+}
+
+.hero-label{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.3em;
+  color:var(--gold);opacity:0.7;margin-bottom:28px;
+  animation:fadeUp .6s ease both;
+}
+
+.hero-name{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(52px,12vw,110px);font-weight:900;
+  letter-spacing:-0.02em;line-height:0.9;color:#fff;
+  animation:fadeUp .6s .1s ease both;
+}
+.hero-name .glitch{position:relative;display:inline-block}
+.hero-name .glitch::before,.hero-name .glitch::after{content:attr(data-text);position:absolute;inset:0}
+.hero-name .glitch::before{color:var(--cyan);clip-path:polygon(0 0,100% 0,100% 35%,0 35%);animation:glitch1 3.5s infinite}
+.hero-name .glitch::after{color:var(--magenta);clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%);animation:glitch2 3.5s infinite}
+@keyframes glitch1{0%,90%,100%{transform:translateX(0);opacity:0}92%{transform:translateX(-4px);opacity:1}94%{transform:translateX(3px);opacity:1}96%{transform:translateX(-2px);opacity:1}98%{transform:translateX(0);opacity:0}}
+@keyframes glitch2{0%,91%,100%{transform:translateX(0);opacity:0}93%{transform:translateX(4px);opacity:1}95%{transform:translateX(-3px);opacity:1}97%{transform:translateX(2px);opacity:1}99%{transform:translateX(0);opacity:0}}
+
+.hero-rune{
+  font-family:'Orbitron',monospace;font-size:clamp(13px,2.5vw,18px);
+  color:var(--gold);letter-spacing:0.2em;margin-top:20px;
+  opacity:0;animation:fadeUp .6s .25s ease forwards;
+}
+
+.hero-sub{
+  margin-top:14px;font-family:'JetBrains Mono',monospace;
+  font-size:clamp(12px,2vw,15px);color:var(--cyan);
+  letter-spacing:0.08em;min-height:1.4em;
+  opacity:0;animation:fadeUp .6s .4s ease forwards;
+}
+.hero-sub .cursor-blink{
+  display:inline-block;width:2px;height:1em;
+  background:var(--cyan);vertical-align:text-bottom;
+  animation:blink .7s infinite;margin-left:2px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Rune rings */
+.rune-ring{
+  position:absolute;width:420px;height:420px;
+  border:1px solid rgba(212,168,83,0.08);border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:rotateSlow 40s linear infinite;pointer-events:none;
+  will-change:transform;
+}
+.rune-ring::before{
+  content:'ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ';
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;letter-spacing:0.5em;color:rgba(212,168,83,0.2);
+  border-radius:50%;word-spacing:8px;white-space:normal;text-align:center;padding:12px;
+}
+.rune-ring-2{
+  position:absolute;width:540px;height:540px;
+  border:1px solid rgba(0,245,255,0.04);border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:rotateSlow 60s linear infinite reverse;pointer-events:none;will-change:transform;
+}
+@keyframes rotateSlow{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* Scroll indicator */
+.scroll-hint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:0.2em;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  animation:fadeUp .6s .8s ease both;pointer-events:none;
+}
+.scroll-arrow{width:1px;height:40px;background:linear-gradient(to bottom,var(--gold),transparent);animation:scrollPulse 2s ease infinite}
+@keyframes scrollPulse{0%,100%{opacity:0.3;transform:scaleY(0.7)}50%{opacity:1;transform:scaleY(1)}}
+
+/* ══ SECTION BASE ══ */
+section{position:relative;z-index:2;padding:100px 24px;max-width:960px;margin:0 auto}
+.sec-label{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.3em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;gap:12px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--gold-dim),transparent);max-width:200px}
+.sec-title{
+  font-family:'Orbitron',sans-serif;font-size:clamp(24px,4vw,36px);
+  font-weight:700;color:#fff;margin-bottom:32px;letter-spacing:-0.01em;
+}
+
+/* ══ ABOUT ══ */
+#about .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+#about p{font-size:15px;line-height:1.9;color:var(--text);margin-bottom:16px}
+#about p:last-child{margin-bottom:0}
+#about strong{color:var(--cyan);font-weight:400}
+
+.stats-panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-top:2px solid var(--gold);border-radius:4px;padding:24px;
+  font-family:'JetBrains Mono',monospace;
+}
+.stats-panel .panel-title{font-size:9px;letter-spacing:0.25em;color:var(--gold);margin-bottom:20px;text-transform:uppercase}
+.stat-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:12px}
+.stat-row:last-child{margin-bottom:0}
+.stat-name{color:var(--muted);letter-spacing:0.05em}
+.stat-bar{flex:1;height:3px;background:rgba(255,255,255,0.05);margin:0 12px;border-radius:2px;overflow:hidden}
+.stat-fill{height:100%;border-radius:2px;background:linear-gradient(to right,var(--gold),var(--cyan));transform-origin:left;animation:barFill 1.2s ease both}
+@keyframes barFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.stat-val{color:var(--cyan);font-size:11px}
+@media(max-width:680px){#about .about-grid{grid-template-columns:1fr}}
+
+/* ══ GAMES ══ */
+#games .games-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.game-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:4px;padding:28px 24px;position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.game-card-glow{position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.game-card.cp{border-top:2px solid var(--cyan)}
+.game-card.bg3{border-top:2px solid var(--gold)}
+.game-card.cp .game-card-glow{background:radial-gradient(ellipse at top left,rgba(0,245,255,0.08),transparent 70%)}
+.game-card.bg3 .game-card-glow{background:radial-gradient(ellipse at top right,rgba(212,168,83,0.1),transparent 70%)}
+.game-card:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-2px)}
+.game-card:hover .game-card-glow{opacity:1}
+.game-icon{font-size:36px;margin-bottom:14px;display:block;line-height:1}
+.game-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;margin-bottom:8px}
+.game-card.cp .game-title{color:var(--cyan)}
+.game-card.bg3 .game-title{color:var(--gold)}
+.game-desc{font-size:12.5px;color:var(--muted);line-height:1.65}
+.game-tag{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:0.12em;padding:3px 8px;border-radius:2px;margin-top:14px;
+}
+.game-card.cp .game-tag{background:rgba(0,245,255,0.08);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)}
+.game-card.bg3 .game-tag{background:rgba(212,168,83,0.08);color:var(--gold);border:1px solid rgba(212,168,83,0.2)}
+@media(max-width:560px){#games .games-grid{grid-template-columns:1fr}}
+
+/* ══ ARSENAL — NEW ══ */
+#arsenal .arsenal-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;
+  margin-bottom:40px;
+}
+.tech-hex{
+  position:relative;background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;
+  padding:20px 12px;text-align:center;
+  transition:all .25s;cursor:default;overflow:hidden;
+}
+.tech-hex::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,var(--glow),transparent 70%);
+  opacity:0;transition:opacity .3s;
+}
+.tech-hex:hover{border-color:var(--clr);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.tech-hex:hover::before{opacity:1}
+.tech-icon{font-size:28px;margin-bottom:10px;display:block}
+.tech-name{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text);margin-bottom:6px}
+.tech-lvl{
+  height:2px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;
+}
+.tech-lvl-fill{
+  height:100%;border-radius:2px;transform-origin:left;
+  animation:barFill 1.4s ease both;
+}
+.tech-badge{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.1em;
+  padding:2px 6px;border-radius:2px;margin-top:6px;display:inline-block;
+}
+
+.arsenal-sub{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;
+  color:var(--gold);margin-bottom:16px;text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;
+}
+.arsenal-sub::after{content:'';flex:1;height:1px;background:var(--gold-dim);max-width:120px}
+
+.hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.hw-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-left:2px solid var(--gold);border-radius:4px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+  transition:all .2s;
+}
+.hw-item:hover{border-left-color:var(--cyan);background:rgba(0,245,255,0.03)}
+.hw-item-icon{font-size:20px;flex-shrink:0}
+.hw-item-text{font-family:'JetBrains Mono',monospace}
+.hw-item-label{font-size:8px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.hw-item-val{font-size:12px;color:var(--cyan)}
+
+/* ══ TIMELINE — NEW ══ */
+#timeline .tl-wrap{position:relative;padding-left:32px}
+#timeline .tl-wrap::before{
+  content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,var(--gold),rgba(212,168,83,0.1));
+}
+.tl-item{
+  position:relative;margin-bottom:40px;opacity:0;
+  transform:translateX(-24px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+.tl-item.visible{opacity:1;transform:translateX(0)}
+.tl-dot{
+  position:absolute;left:-29px;top:4px;
+  width:10px;height:10px;border-radius:50%;
+  border:1px solid var(--gold);background:var(--bg);
+  transition:background .3s,box-shadow .3s;
+}
+.tl-item:hover .tl-dot{background:var(--dot-clr,var(--gold));box-shadow:0 0 12px var(--dot-clr,var(--gold))}
+@keyframes pulse{0%,100%{box-shadow:0 0 3px var(--dot-clr,var(--magenta))}50%{box-shadow:0 0 10px var(--dot-clr,var(--magenta)),0 0 20px rgba(255,45,120,0.3)}}
+.tl-year{
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;
+  color:var(--gold);margin-bottom:6px;text-transform:uppercase;
+}
+.tl-title{
+  font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;
+  color:#fff;margin-bottom:8px;letter-spacing:0.05em;
+}
+.tl-desc{font-size:13px;color:var(--muted);line-height:1.7}
+.tl-tag{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:0.1em;padding:2px 8px;border-radius:2px;
+  margin-top:10px;background:rgba(0,245,255,0.06);
+  color:var(--cyan);border:1px solid rgba(0,245,255,0.15);
+}
+
+/* ══ LINKS ══ */
+#links .links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.link-card{
+  display:block;text-decoration:none;color:inherit;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:4px;padding:20px 18px;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.link-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,var(--cyan),var(--gold));
+  transform:scaleX(0);transform-origin:left;transition:transform .25s ease;
+}
+.link-card:hover{border-color:rgba(0,245,255,0.2);transform:translateY(-2px)}
+.link-card:hover::after{transform:scaleX(1)}
+.link-icon{font-size:24px;margin-bottom:10px;display:block}
+.link-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+.link-name{font-size:14px;font-weight:400;color:#fff;margin-bottom:4px}
+.link-desc{font-size:11.5px;color:var(--muted);line-height:1.5}
+
+/* ══ TERMINAL ══ */
+#terminal-section{padding-bottom:120px}
+.terminal{
+  background:#020408;border:1px solid rgba(0,245,255,0.15);
+  border-radius:6px;overflow:hidden;
+  box-shadow:0 0 40px rgba(0,245,255,0.05),inset 0 0 20px rgba(0,0,0,0.5);
+}
+.terminal-bar{
+  background:rgba(0,245,255,0.04);border-bottom:1px solid rgba(0,245,255,0.1);
+  padding:10px 16px;display:flex;align-items:center;gap:8px;
+}
+.t-dot{width:10px;height:10px;border-radius:50%}
+.t-dot:nth-child(1){background:#ff5f57}
+.t-dot:nth-child(2){background:#febc2e}
+.t-dot:nth-child(3){background:#28c840}
+.terminal-title{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-left:8px;letter-spacing:0.08em}
+.terminal-body{
+  padding:24px;font-family:'JetBrains Mono',monospace;font-size:13px;
+  line-height:2;color:#7ec8a0;min-height:280px;max-height:420px;overflow-y:auto;
+}
+.terminal-body::-webkit-scrollbar{width:4px}
+.terminal-body::-webkit-scrollbar-track{background:transparent}
+.terminal-body::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:2px}
+.t-line{opacity:0;animation:tLine .05s ease forwards}
+@keyframes tLine{to{opacity:1}}
+.t-prompt{color:var(--cyan)}
+.t-cmd{color:#fff}
+.t-out{color:#7ec8a0}
+.t-gold{color:var(--gold)}
+.t-err{color:var(--magenta)}
+.t-green{color:var(--green)}
+.t-input-line{display:flex;align-items:center;gap:0;margin-top:8px;position:sticky;bottom:0;background:#020408;padding-top:4px}
+#t-input{
+  background:transparent;border:none;outline:none;
+  color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;
+  flex:1;caret-color:var(--cyan);
+}
+
+/* ══ FOOTER ══ */
+footer{
+  position:relative;z-index:2;text-align:center;
+  padding:40px 24px 48px;border-top:1px solid var(--border);
+}
+.footer-rune{font-size:22px;letter-spacing:0.4em;color:rgba(212,168,83,0.2);margin-bottom:12px;display:block}
+footer p{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.15em}
+
+/* ── Divider ── */
+.divider{border:none;height:1px;background:linear-gradient(to right,transparent,var(--border),transparent);margin:0}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+
+/* ── Scan effect on hover ── */
+@keyframes scanLine{0%{top:-100%}100%{top:200%}}
+.scan-hover{position:relative;overflow:hidden}
+.scan-hover::after{
+  content:'';position:absolute;left:0;width:100%;height:30%;
+  background:linear-gradient(to bottom,transparent,rgba(0,245,255,0.04),transparent);
+  top:-100%;pointer-events:none;
+}
+.scan-hover:hover::after{animation:scanLine 1s ease forwards}
+
+/* ══ LOADER ══ */
+#loader{
+  position:fixed;inset:0;z-index:99999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease, visibility .6s ease;
+}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.loader-inner{text-align:center;font-family:'JetBrains Mono',monospace}
+.loader-rune{
+  font-size:14px;letter-spacing:0.5em;color:rgba(212,168,83,0.4);
+  margin-bottom:24px;animation:loaderRune 2s ease infinite alternate;
+}
+@keyframes loaderRune{from{opacity:.3;letter-spacing:.4em}to{opacity:.8;letter-spacing:.6em}}
+.loader-title{
+  font-family:'Orbitron',sans-serif;font-size:clamp(32px,8vw,64px);
+  font-weight:900;color:#fff;letter-spacing:.05em;margin-bottom:32px;
+}
+.loader-blink{animation:blink .6s infinite;color:var(--cyan)}
+.loader-bar-wrap{
+  width:260px;height:2px;background:rgba(255,255,255,0.06);
+  border-radius:2px;margin:0 auto 16px;overflow:hidden;
+}
+.loader-bar-fill{
+  height:100%;width:0%;border-radius:2px;
+  background:linear-gradient(to right,var(--gold),var(--cyan));
+  transition:width .12s linear;
+  box-shadow:0 0 10px var(--cyan);
+}
+.loader-status{font-size:9px;letter-spacing:.25em;color:var(--muted);margin-bottom:6px;min-height:1.2em}
+.loader-pct{font-size:11px;letter-spacing:.1em;color:var(--cyan)}
+
+/* ══ FX CANVAS (cursor trail + explosions) ══ */
+#fx-canvas{position:fixed;inset:0;z-index:9997;pointer-events:none}
+
+/* ══ 鼠标设备：扫光 + 磁吸 ══ */
+.mag{position:relative;overflow:hidden}
+/* 扫光：仅鼠标设备 hover 触发 */
+@media(hover:hover) and (pointer:fine){
+  .mag::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.07) 50%,transparent 60%);
+    transform:translateX(-100%);pointer-events:none;transition:transform 0s;
+  }
+  .mag:hover::after{
+    transform:translateX(100%);transition:transform .45s ease;
+  }
+}
+/* 触摸设备：涟漪扩散 */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,245,255,0.25),transparent 70%);
+  transform:scale(0);pointer-events:none;
+  animation:rippleOut .55s cubic-bezier(.23,1,.32,1) forwards;
+}
+@keyframes rippleOut{
+  to{transform:scale(4);opacity:0}
+}
+
+/* ══ 3D TILT ══ */
+.tilt{transform-style:preserve-3d;will-change:transform}
+.tilt-shine{
+  position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(circle at 50% 50%,rgba(255,255,255,0.06),transparent 65%);
+  pointer-events:none;transition:opacity .2s;opacity:0;
+}
+.tilt:hover .tilt-shine{opacity:1}
+
+/* ══ GSAP reveal ══ */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+</style>
+</head>
+<body>
+
+<!-- ══ LOADER ══ -->
+<div id="loader">
+  <div class="loader-inner">
+    <div class="loader-rune">ᚺ ᛟ ᚾ ᚨ ᛚ ᚨ</div>
+    <div class="loader-title">HONALA<span class="loader-blink">_</span></div>
+    <div class="loader-bar-wrap"><div class="loader-bar-fill" id="loader-bar"></div></div>
+    <div class="loader-status" id="loader-status">INITIALIZING NEURAL LINK…</div>
+    <div class="loader-pct" id="loader-pct">0%</div>
+  </div>
+</div>
+
+
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<canvas id="fx-canvas"></canvas>
+
+<main>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="rune-ring"></div>
+  <div class="rune-ring-2"></div>
+
+  <div class="hero-label">// SYSTEM ONLINE · honala.xyz //</div>
+
+  <h1 class="hero-name">
+    <span class="glitch" data-text="HONALA">HONALA</span>
+  </h1>
+
+  <div class="hero-rune">ᚺ ᛟ ᚾ ᚨ ᛚ ᚨ</div>
+
+  <div class="hero-sub">
+    <span id="typewriter"></span><span class="cursor-blink"></span>
+  </div>
+
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ ABOUT ══ -->
+<section id="about">
+  <div class="sec-label reveal">ABOUT</div>
+  <h2 class="sec-title reveal">系统档案</h2>
+
+  <div class="about-grid">
+    <div class="reveal">
+      <p>代号 <strong>honala</strong>，栖息在钢铁与硅基的夹缝之间。白天折腾服务器，晚上在夜之城的霓虹雨中打滚，或者在费伦大陆扮演一个做出糟糕选择的冒险者。</p>
+      <p>在本机跑着一台 <strong>RTX 4070</strong> 驱动的本地 AI，没有云订阅，没有数据上传，只有在自己的神经网络里低语的Qwen3.5。</p>
+      <p>这里是我的数字据点——<strong>chat.honala.xyz</strong> 是 AI 服务，<strong>photos.honala.xyz</strong> 记录朋友的摄影作品等，基础设施持续部署中。</p>
+    </div>
+
+    <div class="stats-panel reveal">
+      <div class="panel-title">// CHARACTER STATS //</div>
+      <div class="stat-row"><span class="stat-name">GPU</span><div class="stat-bar"><div class="stat-fill" style="width:92%"></div></div><span class="stat-val">RTX 4070</span></div>
+      <div class="stat-row"><span class="stat-name">本地AI</span><div class="stat-bar"><div class="stat-fill" style="width:85%;animation-delay:.1s"></div></div><span class="stat-val">Qwen3.5</span></div>
+      <div class="stat-row"><span class="stat-name">咖啡因浓度</span><div class="stat-bar"><div class="stat-fill" style="width:96%;animation-delay:.2s"></div></div><span class="stat-val">MAX</span></div>
+      <div class="stat-row"><span class="stat-name">清醒度</span><div class="stat-bar"><div class="stat-fill" style="width:90%;animation-delay:.3s"></div></div><span class="stat-val">99d20</span></div>
+      <div class="stat-row"><span class="stat-name">睡眠</span><div class="stat-bar"><div class="stat-fill" style="width:20%;animation-delay:.4s"></div></div><span class="stat-val">不足</span></div>
+      <div class="stat-row"><span class="stat-name">社交能量</span><div class="stat-bar"><div class="stat-fill" style="width:35%;animation-delay:.5s"></div></div><span class="stat-val">充能中</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ GAMES ══ -->
+<section id="games">
+  <div class="sec-label reveal">INTERESTS</div>
+  <h2 class="sec-title reveal">正在运行的进程</h2>
+
+  <div class="games-grid">
+    <div class="game-card cp reveal scan-hover tilt">
+      <div class="game-card-glow"></div><div class="tilt-shine"></div>
+      <span class="game-icon">🌆</span>
+      <div class="game-title">CYBERPUNK 2077</div>
+      <p class="game-desc">夜之城，人类最后的野心与最彻底的堕落。V 的故事教会我一件事：义体再多，灵魂才是真正的 chrome。</p>
+      <span class="game-tag">NIGHT CITY · PHANTOM LIBERTY</span>
+    </div>
+    <div class="game-card bg3 reveal scan-hover tilt">
+      <div class="game-card-glow"></div><div class="tilt-shine"></div>
+      <span class="game-icon">🎲</span>
+      <div class="game-title">BALDUR'S GATE 3</div>
+      <p class="game-desc">投一个1，看着一切计划崩塌。Larian 证明了：最好的 RPG 是那些让你做蠢事却依然精彩的游戏。</p>
+      <span class="game-tag">FAERÛN · TAV · 1d20</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ ARSENAL — NEW ══ -->
+<section id="arsenal">
+  <div class="sec-label reveal">LOADOUT</div>
+  <h2 class="sec-title reveal">武器库 · 技术栈</h2>
+
+  <div class="arsenal-sub reveal">SOFTWARE</div>
+  <div class="arsenal-grid reveal">
+    <div class="tech-hex tilt" style="--clr:var(--cyan);--glow:var(--glow-cyan)">
+      <span class="tech-icon">🐧</span>
+      <div class="tech-name">LINUX</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:90%;background:linear-gradient(to right,var(--cyan),var(--green))"></div></div>
+      <span class="tech-badge" style="background:rgba(0,245,255,0.08);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)">主系统</span>
+    </div>
+    <div class="tech-hex tilt" style="--clr:var(--gold);--glow:var(--glow-gold)">
+      <span class="tech-icon">🐍</span>
+      <div class="tech-name">PYTHON</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:80%;background:linear-gradient(to right,var(--gold),var(--cyan));animation-delay:.1s"></div></div>
+      <span class="tech-badge" style="background:rgba(212,168,83,0.08);color:var(--gold);border:1px solid rgba(212,168,83,0.2)">常用</span>
+    </div>
+    <div class="tech-hex tilt" style="--clr:var(--cyan);--glow:var(--glow-cyan)">
+      <span class="tech-icon">🐋</span>
+      <div class="tech-name">DOCKER</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:85%;background:linear-gradient(to right,var(--cyan),var(--gold));animation-delay:.2s"></div></div>
+      <span class="tech-badge" style="background:rgba(0,245,255,0.08);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)">容器化</span>
+    </div>
+    <div class="tech-hex tilt" style="--clr:#f05033;--glow:rgba(240,80,51,0.12)">
+      <span class="tech-icon">⚙️</span>
+      <div class="tech-name">GIT</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:88%;background:linear-gradient(to right,#f05033,var(--gold));animation-delay:.3s"></div></div>
+      <span class="tech-badge" style="background:rgba(240,80,51,0.08);color:#f09070;border:1px solid rgba(240,80,51,0.2)">版本控</span>
+    </div>
+    <div class="tech-hex tilt" style="--clr:var(--gold);--glow:var(--glow-gold)">
+      <span class="tech-icon">🌩️</span>
+      <div class="tech-name">CLOUDFLARE</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:75%;background:linear-gradient(to right,var(--gold),#f6821f);animation-delay:.4s"></div></div>
+      <span class="tech-badge" style="background:rgba(212,168,83,0.08);color:var(--gold);border:1px solid rgba(212,168,83,0.2)">网络层</span>
+    </div>
+    <div class="tech-hex tilt" style="--clr:var(--green);--glow:rgba(0,255,157,0.1)">
+      <span class="tech-icon">🤖</span>
+      <div class="tech-name">OLLAMA</div>
+      <div class="tech-lvl"><div class="tech-lvl-fill" style="width:92%;background:linear-gradient(to right,var(--green),var(--cyan));animation-delay:.5s"></div></div>
+      <span class="tech-badge" style="background:rgba(0,255,157,0.08);color:var(--green);border:1px solid rgba(0,255,157,0.2)">AI 推理</span>
+    </div>
+  </div>
+
+  <div class="arsenal-sub reveal" style="margin-top:32px">HARDWARE</div>
+  <div class="hw-grid reveal">
+    <div class="hw-item"><span class="hw-item-icon">🎮</span><div class="hw-item-text"><div class="hw-item-label">GPU</div><div class="hw-item-val">RTX 4070 · 12GB VRAM</div></div></div>
+    <div class="hw-item"><span class="hw-item-icon">🧠</span><div class="hw-item-text"><div class="hw-item-label">CPU</div><div class="hw-item-val">i5-13490F · 16线程</div></div></div>
+    <div class="hw-item"><span class="hw-item-icon">💾</span><div class="hw-item-text"><div class="hw-item-label">AI MODEL</div><div class="hw-item-val">Qwen3.5 · 本地推理</div></div></div>
+    <div class="hw-item"><span class="hw-item-icon">🔒</span><div class="hw-item-text"><div class="hw-item-label">TUNNEL</div><div class="hw-item-val">Cloudflare · 零暴露</div></div></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ TIMELINE — NEW ══ -->
+<section id="timeline">
+  <div class="sec-label reveal">LORE</div>
+  <h2 class="sec-title reveal">事件日志</h2>
+
+  <div class="tl-wrap">
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">// 2020</div>
+      <div class="tl-title">NETRUNNER 初始化</div>
+      <div class="tl-desc">第一台服务器上线，从那一刻起意识到：自己托管比任何云服务都靠谱。折腾 Nginx、自签证书、防火墙规则……全是代价高昂的教训。</div>
+      <span class="tl-tag">ORIGIN STORY</span>
+    </div>
+
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">// 2022</div>
+      <div class="tl-title">夜之城初次进入</div>
+      <div class="tl-desc">《赛博朋克 2077》正式完成度达到了它本应有的状态。V 的故事让我意识到：比起义体升级，数据主权才是真正的 chrome。</div>
+      <span class="tl-tag">LORE EVENT</span>
+    </div>
+
+    <div class="tl-item reveal">
+      <div class="tl-dot" style="border-color:var(--gold)"></div>
+      <div class="tl-year">// 2023</div>
+      <div class="tl-title">RTX 4070 装备解锁</div>
+      <div class="tl-desc">GPU 到手的第一件事不是打游戏，而是跑推理测试。本地 AI 不再是理想，而是 12GB VRAM 里真实运转的量子神经元。</div>
+      <span class="tl-tag" style="background:rgba(212,168,83,0.08);color:var(--gold);border-color:rgba(212,168,83,0.2)">GEAR UPGRADE</span>
+    </div>
+
+    <div class="tl-item reveal">
+      <div class="tl-dot" style="border-color:var(--cyan);--dot-clr:var(--cyan)"></div>
+      <div class="tl-year">// 2024</div>
+      <div class="tl-title">honala.xyz 节点上线</div>
+      <div class="tl-desc">Cloudflare Tunnel 穿透家庭网络，零公网 IP 暴露。chat.honala.xyz 接入 Qwen3.5，photos 记录朋友的摄影作品等，数字据点正式建立。</div>
+      <span class="tl-tag">NODE ONLINE</span>
+    </div>
+
+    <div class="tl-item reveal">
+      <div class="tl-dot" style="border-color:var(--magenta);--dot-clr:var(--magenta);animation:pulse 2s infinite"></div>
+      <div class="tl-year">// NOW</div>
+      <div class="tl-title">持续施工中…</div>
+      <div class="tl-desc">更多子域待解锁。更多服务待部署。费伦大陆的骰子还在滚动，夜之城的雨还没停。下一个节点，正在加载。</div>
+      <span class="tl-tag" style="background:rgba(255,45,120,0.08);color:var(--magenta);border-color:rgba(255,45,120,0.2)">ACTIVE · LIVE</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ LINKS ══ -->
+<section id="links">
+  <div class="sec-label reveal">NETWORK</div>
+  <h2 class="sec-title reveal">接入节点</h2>
+
+  <div class="links-grid">
+    <a class="link-card reveal scan-hover mag" href="https://chat.honala.xyz/">
+      <span class="link-icon">🤖</span>
+      <div class="link-label">chat</div>
+      <div class="link-name">本地 AI</div>
+      <div class="link-desc">Qwen3.5 · RTX 4070 · 本地推理</div>
+    </a>
+    <a class="link-card reveal scan-hover mag" href="https://photos.honala.xyz/">
+      <span class="link-icon">📷</span>
+      <div class="link-label">photos</div>
+      <div class="link-name">摄影作品</div>
+      <div class="link-desc">朋友们的摄影作品集合 · 支持上传</div>
+    </a>
+    <a class="link-card reveal scan-hover mag" id="mail-link" data-u="hi" data-d="honala.xyz">
+      <span class="link-icon">✉️</span>
+      <div class="link-label">mail</div>
+      <div class="link-name">联系</div>
+      <div class="link-desc" id="mail-text">hi&#x40;honala.xyz</div>
+    </a>
+    <a class="link-card reveal scan-hover mag" href="https://games.honala.xyz/">
+      <span class="link-icon">🎮</span>
+      <div class="link-label">games</div>
+      <div class="link-name">游戏合集</div>
+      <div class="link-desc">统一入口，game1 / game2 / game3 / game4</div>
+    </a>
+    <a class="link-card reveal scan-hover mag" href="https://download.honala.xyz/">
+      <span class="link-icon">⬇️</span>
+      <div class="link-label">download</div>
+      <div class="link-name">下载</div>
+      <div class="link-desc">文件下载 / 资源分享</div>
+    </a>
+    <a class="link-card reveal scan-hover mag" href="https://flix.honala.xyz/">
+      <span class="link-icon">🎬</span>
+      <div class="link-label">flix</div>
+      <div class="link-name">私人影院</div>
+      <div class="link-desc">HLS 视频流播放器</div>
+    </a>
+    <div class="link-card reveal" style="opacity:0.4;cursor:default;border-style:dashed">
+      <span class="link-icon">🔮</span>
+      <div class="link-label">???</div>
+      <div class="link-name">未来…</div>
+      <div class="link-desc">正在施工中……</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ TERMINAL ══ -->
+<section id="terminal-section">
+  <div class="sec-label reveal">INTERFACE</div>
+  <h2 class="sec-title reveal">终端控制台</h2>
+
+  <div class="terminal reveal">
+    <div class="terminal-bar">
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+      <span class="terminal-title">honala@nightcity:~</span>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <div class="t-input-line">
+        <span class="t-prompt" id="t-prompt">❯&nbsp;</span>
+        <input id="t-input" placeholder="输入命令… (试试 help)" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span class="footer-rune">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</span>
+  <p>// honala.xyz · BUILT IN NIGHT CITY · POWERED BY LOCAL AI //</p>
+</footer>
+
+<script>
+'use strict';
+
+/* ── Utils ── */
+const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ══ CURSOR ══ */
+const $cursor = document.getElementById('cursor');
+const $ring   = document.getElementById('cursor-ring');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  $cursor.style.left = mx+'px';
+  $cursor.style.top  = my+'px';
+});
+
+/* cursor ring position updated in main RAF loop */
+
+/* ══ CANVAS BACKGROUND ══ */
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+let W, H;
+
+function resizeCanvas(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ── 星点颜色表
+const starPalette = { gold:'212,168,83', blue:'120,180,255', white:'255,255,255' };
+
+// ── 星空：固定静态星点（大量，不移动，只闪烁）
+const STAR_COUNT = 260;
+const stars = Array.from({length: STAR_COUNT}, () => ({
+  x: Math.random() * 1920,
+  y: Math.random() * 1080,
+  r: Math.random() * 1.1 + 0.2,
+  base: Math.random() * 0.5 + 0.15,  // 基础亮度
+  phase: Math.random() * Math.PI * 2,
+  speed: Math.random() * 0.008 + 0.003,
+  color: Math.random() > 0.85 ? 'gold' : (Math.random() > 0.6 ? 'blue' : 'white')
+}));
+
+// ── 流星
+const meteors = [];
+function spawnMeteor(){
+  if(meteors.length < 3 && Math.random() < 0.004){
+    meteors.push({
+      x: Math.random() * W * 1.2,
+      y: -20,
+      len: Math.random() * 120 + 60,
+      spd: Math.random() * 6 + 4,
+      alpha: 1,
+      angle: Math.PI / 5 + (Math.random()-.5) * 0.2
+    });
+  }
+}
+
+// ── 星云光斑（固定位置，极淡）
+const nebulae = [
+  {x:0.15, y:0.2,  r:220, c:'rgba(0,100,180,'},
+  {x:0.75, y:0.55, r:180, c:'rgba(80,0,120,'},
+  {x:0.45, y:0.8,  r:160, c:'rgba(0,180,140,'},
+];
+
+// ── 网络粒子
+const PARTICLE_COUNT = 50;
+const particles = Array.from({length: PARTICLE_COUNT}, () => ({
+  x:  Math.random() * window.innerWidth,
+  y:  Math.random() * window.innerHeight,
+  vx: (Math.random()-.5) * .28,
+  vy: (Math.random()-.5) * .28,
+  r:  Math.random() * 1.4 + .4,
+  isCyan: Math.random() > .6
+}));
+
+
+
+let frame = 0;
+
+// Pre-build grid path once, rebuild only on resize
+let gridPath = null;
+function buildGridPath(){
+  gridPath = new Path2D();
+  for(let x=0; x<W; x+=60){ gridPath.moveTo(x,0); gridPath.lineTo(x,H); }
+  for(let y=0; y<H; y+=60){ gridPath.moveTo(0,y); gridPath.lineTo(W,y); }
+}
+buildGridPath();
+
+// Rebuild grid path on resize
+window.removeEventListener('resize', resizeCanvas);
+function resizeAll(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  if(window._fxResize) window._fxResize(window.innerWidth, window.innerHeight);
+  buildGridPath();
+}
+window.addEventListener('resize', resizeAll);
+
+function drawBg(){
+  ctx.clearRect(0, 0, W, H);
+  frame++;
+
+  // ── 星云光斑
+  nebulae.forEach(n => {
+    const grd = ctx.createRadialGradient(n.x*W, n.y*H, 0, n.x*W, n.y*H, n.r);
+    grd.addColorStop(0,   n.c + '0.055)');
+    grd.addColorStop(0.5, n.c + '0.025)');
+    grd.addColorStop(1,   n.c + '0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(n.x*W - n.r, n.y*H - n.r, n.r*2, n.r*2);
+  });
+
+  // ── 背景星点（按屏幕比例映射）
+  // 每4帧更新一次sin以减少CPU开销
+  const updateTwinkle = (frame % 4 === 0);
+  stars.forEach(s => {
+    const sx = (s.x / 1920) * W;
+    const sy = (s.y / 1080) * H;
+    if(updateTwinkle) s._twinkle = s.base + Math.sin(frame * s.speed + s.phase) * 0.18;
+    const twinkle = s._twinkle || s.base;
+    ctx.beginPath();
+    ctx.arc(sx, sy, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(${starPalette[s.color]||'255,255,255'},${twinkle})`;
+    ctx.fill();
+    // 亮星加十字光芒 —— 合并为一次stroke
+    if(s.r > 1.0){
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(sx-3,sy); ctx.lineTo(sx+3,sy);
+      ctx.moveTo(sx,sy-3); ctx.lineTo(sx,sy+3);
+      ctx.stroke();
+    }
+  });
+
+  // ── 流星
+  spawnMeteor();
+  for(let i = meteors.length-1; i >= 0; i--){
+    const m = meteors[i];
+    m.x += Math.cos(m.angle) * m.spd;
+    m.y += Math.sin(m.angle) * m.spd;
+    m.alpha -= 0.014;
+    if(m.alpha <= 0){ meteors.splice(i,1); continue; }
+    const tx = m.x - Math.cos(m.angle) * m.len;
+    const ty = m.y - Math.sin(m.angle) * m.len;
+    const grd = ctx.createLinearGradient(tx, ty, m.x, m.y);
+    grd.addColorStop(0, 'rgba(255,255,255,0)');
+    grd.addColorStop(1, `rgba(200,240,255,${m.alpha * 0.9})`);
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(m.x, m.y);
+    ctx.strokeStyle = grd; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(m.x, m.y, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${m.alpha})`; ctx.fill();
+  }
+
+  // ── 网格（一次性批量绘制）
+  ctx.strokeStyle = 'rgba(0,245,255,0.022)';
+  ctx.lineWidth = 1;
+  ctx.stroke(gridPath);
+
+  // ── 网络粒子
+  particles.forEach(p => {
+    const dx = mx - p.x, dy = my - p.y;
+    const dist = Math.hypot(dx, dy);
+    if(dist < 160 && dist > 1){ p.vx += dx/dist * 0.006; p.vy += dy/dist * 0.006; }
+    const spd = Math.hypot(p.vx, p.vy);
+    if(spd > 1){ p.vx /= spd; p.vy /= spd; }
+    p.x = (p.x + p.vx + W) % W;
+    p.y = (p.y + p.vy + H) % H;
+    const col = p.isCyan ? 'rgba(0,245,255,' : 'rgba(212,168,83,';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = col + '0.55)'; ctx.fill();
+  });
+
+  // ── 粒子连线
+  for(let i=0; i<particles.length; i++){
+    const a = particles[i];
+    for(let j=i+1; j<particles.length; j++){
+      const b = particles[j];
+      if(Math.abs(a.x-b.x) > 120 || Math.abs(a.y-b.y) > 120) continue;
+      const d = Math.hypot(a.x-b.x, a.y-b.y);
+      if(d < 120){
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(0,245,255,${(1-d/120)*.05})`;
+        ctx.lineWidth = 1; ctx.stroke();
+      }
+    }
+  }
+}
+
+/* ══ TYPEWRITER ══ */
+const TW_LINES = [
+  '自建AI · 本地优先 · 数据不出门',
+  '// Cyberpunk 2077 · Baldur\'s Gate 3',
+  '正在加载下一个冒险……',
+  '// RTX 4070 · Qwen3.5 · Night City',
+];
+let twLine=0, twChar=0, twDel=false;
+const $tw = document.getElementById('typewriter');
+
+function typeLoop(){
+  const line = TW_LINES[twLine];
+  if(!twDel){
+    $tw.textContent = line.slice(0, ++twChar);
+    if(twChar > line.length){ twDel=true; setTimeout(typeLoop, 2000); return; }
+  } else {
+    --twChar;
+    if(twChar < 0){ twDel=false; twLine=(twLine+1)%TW_LINES.length; twChar=0; setTimeout(typeLoop,400); return; }
+    $tw.textContent = line.slice(0, twChar);
+  }
+  setTimeout(typeLoop, twDel ? 38 : 76);
+}
+setTimeout(typeLoop, 1000);
+
+/* ══ SCROLL REVEAL — handled by GSAP ScrollTrigger above ══
+   Keeping IO as fallback if GSAP CDN fails */
+if(typeof gsap === 'undefined'){
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: .1 });
+  document.querySelectorAll('.reveal, .tl-item').forEach(el => io.observe(el));
+}
+
+/* ══ TERMINAL ══ */
+const $tbody  = document.getElementById('terminal-body');
+const $tinput = document.getElementById('t-input');
+const $tprompt = document.getElementById('t-prompt');
+
+// ── 公共：获取 Ollama 节点信息
+async function fetchOllamaTags(){
+  const t0 = Date.now();
+  const res = await fetch('/api/tags');
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  return { ms: Date.now()-t0, models: data.models||[] };
+}
+
+const CMDS = {
+  help:{out:[
+    '<span class="t-gold">┌─ 可用命令 ──────────────────────────────┐</span>',
+    '  <span class="t-prompt">whoami</span>        — 身份信息',
+    '  <span class="t-prompt">ls</span>             — 列出服务节点',
+    '  <span class="t-prompt">neofetch</span>      — 系统信息',
+    '  <span class="t-prompt">ping ai</span>        — 测试 AI 延迟',
+    '  <span class="t-prompt">cat loot.txt</span>   — 查看当前掉落',
+    '  <span class="t-prompt">roll d20</span>       — 投一个20面骰',
+    '  <span class="t-prompt">hack</span>           — 开始黑客序列',
+    '  <span class="t-prompt">matrix</span>         — 进入矩阵',
+    '  <span class="t-prompt">uptime</span>         — 系统在线时长',
+    '  <span class="t-prompt">date</span>           — 当前时间戳',
+    '  <span class="t-prompt">ask &lt;问题&gt;</span>     — 问本地 AI（真实连接）',
+    '  <span class="t-prompt">status</span>        — 查看 AI 节点状态',
+    '  <span class="t-prompt">sudo rm -rf /</span>  — 危险指令',
+    '  <span class="t-prompt">clear</span>          — 清空终端',
+    '<span class="t-gold">└─────────────────────────────────────────┘</span>',
+  ]},
+  whoami:{out:[
+    '<span class="t-gold">[ IDENTITY FILE DECRYPTED ]</span>',
+    '  NAME    : honala',
+    '  CLASS   : Netrunner / Wild Magic Barbarian',
+    '  GEAR    : RTX 4070 · Qwen3.5 · Cloudflare Tunnel',
+    '  BASE    : 夜之城某个角落',
+    '  STATUS  : <span class="t-prompt">ONLINE · ALL SYSTEMS NOMINAL</span>',
+  ]},
+  ls:{out:[
+    '<span class="t-gold">// NETWORK NODES</span>',
+    '  drwxr  <span class="t-prompt">chat.honala.xyz</span>    — 本地 AI 对话',
+    '  drwxr  <span class="t-prompt">photos.honala.xyz</span>  — 相册存档',
+    '  drwxr  <span class="t-prompt">games.honala.xyz</span>   — 游戏合集',
+    '  drwxr  <span class="t-prompt">download.honala.xyz</span> — 文件下载',
+    '  drwxr  <span class="t-prompt">flix.honala.xyz</span>   — 私人影院 (HLS)',
+    '  drwxr  <span class="t-prompt">hi@honala.xyz</span>      — 通讯频道',
+    '  ??---  <span class="t-err">????.honala.xyz</span>    — [LOCKED] 解锁中…',
+  ]},
+  neofetch:{out:[
+    '  <span class="t-gold">    ██████████</span>   <span class="t-prompt">honala</span>@nightcity',
+    '  <span class="t-gold">  ████░░░░████</span>   OS:     Linux · Night City Edition',
+    '  <span class="t-gold">  ████░░░░████</span>   GPU:    RTX 4070 12GB',
+    '  <span class="t-gold">  ████████████</span>   AI:     Qwen3.5 (local)',
+    '  <span class="t-gold">    ██████████</span>   NET:    Cloudflare Tunnel',
+    '                   UPTIME: 持续在线中',
+    '                   THEME: <span class="t-err">Cyberpunk 2077</span>',
+  ]},
+  'ping ai':{out:null, async fn(){
+    try{
+      const {ms, models} = await fetchOllamaTags();
+      const modelStr = models.map(m=>m.name).join(', ') || '无';
+      return [
+        'PING chat.honala.xyz (RTX4070-local) ...',
+        `  Response: <span class="t-prompt">${ms}ms</span> · Status: <span class="t-green">200 OK</span>`,
+        `  Models: <span class="t-gold">${modelStr}</span>`,
+        `<span class="t-green">✓ AI 节点在线 · 延迟 ${ms}ms</span>`,
+      ];
+    }catch(e){
+      return [
+        '<span class="t-err">PING 失败 — AI 节点离线或未启动</span>',
+        `<span class="t-err">Error: ${e.message}</span>`,
+        '运行 <span class="t-prompt">ollama serve</span> 后重试',
+      ];
+    }
+  }},
+  'cat loot.txt':{out:[
+    '<span class="t-gold">[ CURRENT LOOT TABLE ]</span>',
+    '  [★★★★★] RTX 4070 — 本地推理核心',
+    '  [★★★★☆] Cloudflare Tunnel — 零公网IP穿透',
+    '  [★★★☆☆] 睡眠时间 — 严重不足',
+    '  [★★★★★] 朋友黑历史 — 永久存档中',
+    '  [????] 下一件装备 — 未知',
+  ]},
+  uptime:{out:null, fn(){
+    const start = new Date('2024-01-01');
+    const now   = new Date();
+    const days  = Math.floor((now-start)/(1000*60*60*24));
+    const hrs   = now.getHours();
+    const mins  = now.getMinutes();
+    return [
+      `  系统启动时间: <span class="t-gold">2024-01-01 00:00:00</span>`,
+      `  持续在线:     <span class="t-prompt">${days} 天 ${hrs} 时 ${mins} 分</span>`,
+      `  <span class="t-green">所有服务运行正常 ✓</span>`,
+    ];
+  }},
+  date:{out:null, fn(){
+    const now = new Date();
+    return [`  <span class="t-gold">${now.toLocaleString('zh-CN',{hour12:false})}</span>  // 夜之城标准时间`];
+  }},
+  hack:{out:[
+    '<span class="t-err">[ 正在发起黑客序列 ]</span>',
+    '  <span class="t-prompt">></span> 扫描目标端口…',
+    '  <span class="t-prompt">></span> 绕过防火墙… <span class="t-gold">[██████████] 100%</span>',
+    '  <span class="t-prompt">></span> 注入神经链路…',
+    '  <span class="t-prompt">></span> 解密身份令牌…',
+    '  <span class="t-green">>> ACCESS GRANTED — 欢迎，Johnny Silverhand</span>',
+  ]},
+  matrix:{out:[
+    '<span class="t-green">ウエオ 起 動 中 ...</span>',
+    '<span class="t-green">ハロー ワールド · 01001000 01001111 01001110</span>',
+    '<span class="t-green">系统: 你选择了红色药丸。</span>',
+    '<span class="t-prompt">The Matrix has you...</span>',
+    '<span class="t-gold">// 但 honala.xyz 跑在本地，没有矩阵能控制它。</span>',
+  ]},
+  status:{out:null, async fn(){
+    try{
+      const {ms, models} = await fetchOllamaTags();
+      const lines=[
+        '<span class="t-gold">[ AI NODE STATUS ]</span>',
+        `  连接状态: <span class="t-green">ONLINE ✓</span>`,
+        `  延迟:     <span class="t-prompt">${ms}ms</span>`,
+        `  模型数量: <span class="t-prompt">${models.length}</span>`,
+      ];
+      models.forEach(m=>{
+        const gb=(m.size/1e9).toFixed(1);
+        lines.push(`  · <span class="t-gold">${m.name}</span> <span class="t-out">(${gb}GB)</span>`);
+      });
+      return lines;
+    }catch(e){
+      return [
+        '<span class="t-err">[ AI NODE OFFLINE ]</span>',
+        '  Ollama 未运行，请先执行 <span class="t-prompt">ollama serve</span>',
+      ];
+    }
+  }},
+  'sudo rm -rf /':{out:[
+    '<span class="t-err">[sudo] password for honala: ████████</span>',
+    '<span class="t-err">rm: it is dangerous to operate recursively on &#39;/&#39;</span>',
+    '<span class="t-gold">…jk，已被安全系统拦截。</span>',
+    '<span class="t-green">// 系统完整性：100% · 数据无损</span>',
+  ]},
+};
+
+let cmdHistory = [], historyIdx = -1;
+
+function addLine(html, delay=0){
+  return new Promise(res => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 't-line';
+      div.innerHTML = html;
+      $tbody.insertBefore(div, $tbody.lastElementChild);
+      $tbody.scrollTop = $tbody.scrollHeight;
+      res();
+    }, delay);
+  });
+}
+
+async function runCmd(raw){
+  const cmd = raw.trim().toLowerCase();
+  await addLine(`<span class="t-prompt">❯</span> <span class="t-cmd">${escHtml(raw)}</span>`);
+
+  if(cmd === 'clear'){ $tbody.querySelectorAll('.t-line').forEach(l=>l.remove()); return; }
+
+  if(cmd === 'roll d20' || (cmd.startsWith('roll') && cmd.includes('d20'))){
+    const n = Math.ceil(Math.random()*20);
+    const cls = n>=18?'t-gold':n<=3?'t-err':'t-out';
+    await addLine(`<span class="${cls}">🎲 投出了 ${n}${n===20?' ← NAT 20!! 奇迹降临⚡':n===1?' ← NAT 1... 一切崩塌😭':''}</span>`, 80);
+    return;
+  }
+
+  // ask 命令 — 真实连接 Ollama 流式输出
+  if(cmd.startsWith('ask ')){
+    const question = raw.slice(4).trim();
+    if(!question){ await addLine('<span class="t-err">用法: ask &lt;你的问题&gt;</span>',80); return; }
+    await addLine(`<span class="t-gold">[ NEURAL LINK · querying local AI ]</span>`,60);
+    // 创建输出行，流式追加
+    const outDiv = document.createElement('div');
+    outDiv.className='t-line';
+    outDiv.style.cssText='opacity:1;color:#c8d4e8;line-height:1.8;white-space:pre-wrap;word-break:break-word';
+    $tbody.insertBefore(outDiv, $tbody.lastElementChild);
+    let fullText='';
+    try{
+      const res=await fetch('/api/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model: 'qwen3.5:9b',
+          messages:[
+            {role:'system',content:'你是 honala 的个人网站助手，风格简洁赛博朋克，回答简短有力，不超过80字。'},
+            {role:'user',content:question}
+          ],
+          stream:true,
+          think:false
+        })
+      });
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const reader=res.body.getReader();
+      const decoder=new TextDecoder();
+      let buf='';
+      while(true){
+        const{done,value}=await reader.read();
+        if(done)break;
+        const lines=(buf+decoder.decode(value,{stream:true})).split('\n');
+        buf=lines.pop();
+        for(const line of lines){
+          if(!line.trim())continue;
+          try{
+            const d=JSON.parse(line);
+            const token=d?.message?.content||'';
+            if(token){fullText+=token;outDiv.textContent=fullText;}
+            if(d.done){
+              outDiv.innerHTML='<span class="t-green">AI ❯</span> '+escHtml(fullText);
+              $tbody.scrollTop=$tbody.scrollHeight;
+            }
+          }catch(_){}
+        }
+      }
+      // 兜底：若d.done未触发但流已结束
+      if(fullText && !outDiv.querySelector('.t-green')){
+        outDiv.innerHTML='<span class="t-green">AI ❯</span> '+escHtml(fullText);
+      }
+    }catch(e){
+      outDiv.innerHTML=`<span class="t-err">连接失败: ${e.message} — Ollama 是否在运行？</span>`;
+    }
+    $tbody.scrollTop=$tbody.scrollHeight;
+    return;
+  }
+
+  // fn 类命令（异步）
+  const entry = CMDS[cmd];
+  if(entry){
+    const lines = entry.fn ? await entry.fn() : entry.out;
+    for(let i=0; i<lines.length; i++) await addLine(`<span class="t-out">${lines[i]}</span>`, i*55);
+    return;
+  }
+
+  await addLine(`<span class="t-err">bash: ${raw}: command not found  (试试 help)</span>`, 80);
+}
+
+$tinput.addEventListener('keydown', async e => {
+  if(e.key === 'Enter' && $tinput.value.trim()){
+    const v = $tinput.value;
+    cmdHistory.unshift(v);
+    historyIdx = -1;
+    $tinput.value = '';
+    $tinput.disabled = true;
+    await runCmd(v);
+    $tinput.disabled = false;
+    $tinput.focus();
+  }
+  // Command history: up/down arrows
+  if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(historyIdx < cmdHistory.length-1) $tinput.value = cmdHistory[++historyIdx];
+  }
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    if(historyIdx > 0) $tinput.value = cmdHistory[--historyIdx];
+    else { historyIdx=-1; $tinput.value=''; }
+  }
+  // Tab autocomplete
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const val = $tinput.value.toLowerCase();
+    if(!val) return;
+    // ask 前缀不补全
+    if(val.startsWith('ask ')) return;
+    const match = Object.keys(CMDS).find(k => k.startsWith(val));
+    if(match) $tinput.value = match;
+  }
+});
+$tinput.addEventListener('focus', () => { $tprompt.style.color = 'var(--cyan)'; });
+$tinput.addEventListener('blur',  () => { $tprompt.style.color = 'var(--muted)'; });
+
+// Boot sequence — 滚到终端时才触发，只触发一次
+async function runBootSequence(){
+  await addLine('<span class="t-out">HONALA OS v2.077 — Initializing…</span>', 0);
+  await addLine('<span class="t-out">Loading neural interface modules…</span>', 500);
+  await addLine('<span class="t-green">✓ RTX 4070 detected · VRAM 12GB</span>', 800);
+  await addLine('<span class="t-green">✓ Cloudflare Tunnel · connected</span>', 1100);
+  await addLine('<span class="t-gold">⚡ SYSTEM READY — 输入 help 查看命令</span>', 1600);
+}
+
+const bootIO = new IntersectionObserver(entries => {
+  if(entries[0].isIntersecting){
+    bootIO.disconnect(); // 只触发一次
+    runBootSequence();
+  }
+}, { threshold: 0.25 });
+bootIO.observe(document.getElementById('terminal-section'));
+
+/* ══ EMAIL — bypass Cloudflare obfuscation ══ */
+(function(){
+  const el = document.getElementById('mail-link');
+  if(!el) return;
+  const addr = el.dataset.u + '\x40' + el.dataset.d;
+  el.href = 'mailto:' + addr;
+  const txt = document.getElementById('mail-text');
+  if(txt) txt.textContent = addr;
+})();
+
+
+/* ══════════════════════════════════════════
+   HONALA v3 · SPECIAL EFFECTS ENGINE
+   1. Loader  2. GSAP ScrollTrigger
+   4. Magnetic Hover  5. 3D Tilt
+   6. Cursor Trail + Click Explosion
+══════════════════════════════════════════ */
+
+/* ── 1. LOADER ── */
+(function(){
+  const $loader = document.getElementById('loader');
+  const $bar    = document.getElementById('loader-bar');
+  const $status = document.getElementById('loader-status');
+  const $pct    = document.getElementById('loader-pct');
+
+  const steps = [
+    [10,  'SCANNING NEURAL INTERFACE…'],
+    [28,  'LOADING RTX 4070 DRIVERS…'],
+    [45,  'DECRYPTING IDENTITY FILE…'],
+    [62,  'CONNECTING CLOUDFLARE TUNNEL…'],
+    [78,  'CALIBRATING RUNE RINGS…'],
+    [91,  'NIGHT CITY ONLINE…'],
+    [100, 'ACCESS GRANTED'],
+  ];
+
+  let si = 0;
+  function tick(){
+    if(si >= steps.length){ done(); return; }
+    const [pct, txt] = steps[si++];
+    $bar.style.width = pct + '%';
+    $status.textContent = txt;
+    $pct.textContent = pct + '%';
+    setTimeout(tick, si === steps.length ? 300 : 220 + Math.random()*180);
+  }
+  setTimeout(tick, 120);
+
+  function done(){
+    setTimeout(() => {
+      $loader.classList.add('done');
+      document.body.style.overflow = '';
+    }, 350);
+  }
+  // Prevent scroll during load
+  document.body.style.overflow = 'hidden';
+})();
+
+/* ── 2. 已移除 Lenis（滚动延迟根源），使用原生滚动 ── */
+
+/* ── 3. GSAP + ScrollTrigger ── */
+if(typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined'){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Batch reveal for .reveal elements
+  ScrollTrigger.batch('.reveal', {
+    start: 'top 88%',
+    onEnter: batch => gsap.to(batch, {
+      opacity: 1, y: 0, duration: .65, stagger: .07, ease: 'power2.out'
+    }),
+    once: true
+  });
+
+  // Timeline items slide in from left
+  ScrollTrigger.batch('.tl-item', {
+    start: 'top 88%',
+    onEnter: batch => gsap.to(batch, {
+      opacity: 1, x: 0, duration: .6, stagger: .1, ease: 'power2.out'
+    }),
+    once: true
+  });
+
+  // Hero name parallax
+  gsap.to('.hero-name', {
+    yPercent: -18,
+    ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+  });
+
+  // Rune rings speed up on scroll
+  gsap.to('.rune-ring', {
+    rotation: 360,
+    ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 2 }
+  });
+
+  // Stats panel counter animation
+  ScrollTrigger.create({
+    trigger: '.stats-panel',
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      document.querySelectorAll('.stat-fill').forEach(el => {
+        gsap.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: 'power3.out',
+          delay: parseFloat(el.style.animationDelay||0) });
+      });
+    }
+  });
+
+  // Section titles glitch-in
+  document.querySelectorAll('.sec-title').forEach(el => {
+    gsap.fromTo(el,
+      { opacity:0, skewX: 6, x: -20 },
+      { opacity:1, skewX: 0, x: 0, duration: .7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+      }
+    );
+  });
+}
+
+/* ── 公共：鼠标离开时平滑重置 transform ── */
+function attachResetTransition(el, resetTransform){
+  el.addEventListener('mouseleave', () => {
+    el.style.transition = 'transform .5s cubic-bezier(.23,1,.32,1)';
+    el.style.transform  = resetTransform;
+    setTimeout(() => el.style.transition = '', 500);
+  });
+  el.addEventListener('mouseenter', () => { el.style.transition = 'transform .08s linear'; });
+}
+
+/* ── 4. 鼠标端磁吸 + 触摸端涟漪 ── */
+const hasMouse = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+if(hasMouse){
+  // 鼠标设备：磁吸 hover
+  document.querySelectorAll('.mag').forEach(el => {
+    const strength = 0.22; // 适当减小强度
+    el.addEventListener('mousemove', e => {
+      const r  = el.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width/2);
+      const dy = e.clientY - (r.top  + r.height/2);
+      el.style.transform = `translate(${dx*strength}px,${dy*strength}px)`;
+    });
+    attachResetTransition(el, 'translate(0,0)');
+  });
+} else {
+  // 触摸设备：点击涟漪
+  document.querySelectorAll('.mag').forEach(el => {
+    el.addEventListener('touchstart', e => {
+      const touch = e.touches[0];
+      const r     = el.getBoundingClientRect();
+      const size  = Math.max(r.width, r.height) * 1.8;
+      const rip   = document.createElement('span');
+      rip.className = 'ripple';
+      rip.style.cssText = `width:${size}px;height:${size}px;left:${touch.clientX-r.left-size/2}px;top:${touch.clientY-r.top-size/2}px`;
+      el.appendChild(rip);
+      rip.addEventListener('animationend', () => rip.remove());
+    }, {passive:true});
+  });
+}
+
+/* ── 5. 3D TILT ── */
+document.querySelectorAll('.tilt').forEach(el => {
+  const MAX = 14;
+  el.addEventListener('mousemove', e => {
+    const r = el.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width  - .5;   // -0.5 ~ 0.5
+    const ny = (e.clientY - r.top)  / r.height - .5;
+    el.style.transform = `perspective(600px) rotateY(${nx*MAX}deg) rotateX(${-ny*MAX}deg) scale(1.03)`;
+    // Move shine
+    const shine = el.querySelector('.tilt-shine');
+    if(shine) shine.style.background =
+      `radial-gradient(circle at ${(nx+.5)*100}% ${(ny+.5)*100}%, rgba(255,255,255,0.09), transparent 60%)`;
+  });
+  attachResetTransition(el, 'perspective(600px) rotateY(0) rotateX(0) scale(1)');
+});
+
+/* ── 6. CURSOR TRAIL + CLICK EXPLOSION ── */
+(function(){
+  const fc   = document.getElementById('fx-canvas');
+  const fctx = fc.getContext('2d');
+  let FW = fc.width = window.innerWidth, FH = fc.height = window.innerHeight;
+  // resize handled by resizeAll() above
+
+  // Trail particles
+  const trail = [];
+  let tmx = -999, tmy = -999, _lastTmx = -999, _lastTmy = -999;
+  document.addEventListener('mousemove', e => { tmx = e.clientX; tmy = e.clientY; });
+
+  // Explosion particles
+  const explode = [];
+  document.addEventListener('click', e => {
+    const count = 22;
+    for(let i=0; i<count; i++){
+      const angle = (Math.PI*2/count)*i + Math.random()*.3;
+      const spd   = Math.random()*4 + 1.5;
+      explode.push({
+        x: e.clientX, y: e.clientY,
+        vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd,
+        r: Math.random()*2.5 + 1,
+        life: 1,
+        color: Math.random()>.5 ? '0,245,255' : '212,168,83'
+      });
+    }
+    for(let i=0; i<6; i++){
+      const angle = Math.random()*Math.PI*2;
+      explode.push({
+        x: e.clientX, y: e.clientY,
+        vx: Math.cos(angle)*(Math.random()*6+3),
+        vy: Math.sin(angle)*(Math.random()*6+3),
+        r: Math.random()*4+2, life:1,
+        color: '255,45,120'
+      });
+    }
+  });
+
+  // ── 统一主循环：ring + bg canvas + fx canvas，只有一个 rAF ──
+  function mainLoop(){
+    // 1. 更新 cursor ring 位置
+    rx += (mx-rx)*.12;
+    ry += (my-ry)*.12;
+    $ring.style.left = rx+'px';
+    $ring.style.top  = ry+'px';
+
+    // 2. 背景 canvas
+    drawBg();
+
+    // 3. fx canvas
+    fctx.clearRect(0, 0, FW, FH);
+
+    // 仅鼠标移动时生成 trail，静止不生成（防止粒子堆积在圆圈内）
+    const mouseMoved = (tmx !== _lastTmx || tmy !== _lastTmy);
+    if(mouseMoved && tmx > 0){
+      _lastTmx = tmx; _lastTmy = tmy;
+      trail.push({
+        x: tmx + (Math.random()-.5)*4,
+        y: tmy + (Math.random()-.5)*4,
+        r: Math.random()*1.8 + .6,
+        life: 0.85,
+        color: Math.random()>.6 ? '0,245,255' : '212,168,83'
+      });
+    }
+
+    for(let i=trail.length-1; i>=0; i--){
+      const p = trail[i];
+      p.life -= 0.055;
+      if(p.life <= 0){ trail.splice(i,1); continue; }
+      fctx.beginPath();
+      fctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI*2);
+      fctx.fillStyle = `rgba(${p.color},${p.life * 0.7})`;
+      fctx.fill();
+    }
+    if(trail.length > 120) trail.splice(0, trail.length - 120);
+
+    for(let i=explode.length-1; i>=0; i--){
+      const p = explode[i];
+      p.x += p.vx; p.y += p.vy;
+      p.vx *= .92; p.vy *= .92;
+      p.life -= 0.028;
+      if(p.life <= 0){ explode.splice(i,1); continue; }
+      fctx.beginPath();
+      fctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI*2);
+      fctx.fillStyle = `rgba(${p.color},${p.life})`;
+      fctx.fill();
+      if(p.r > 2.5){
+        fctx.beginPath();
+        fctx.arc(p.x, p.y, p.r * p.life * 2.5, 0, Math.PI*2);
+        fctx.fillStyle = `rgba(${p.color},${p.life * 0.12})`;
+        fctx.fill();
+      }
+    }
+
+    requestAnimationFrame(mainLoop);
+  }
+  // expose FW/FH for resizeAll
+  window._fxResize = function(w,h){ FW=fc.width=w; FH=fc.height=h; };
+  requestAnimationFrame(mainLoop);
+})();
+</script>
+</body>
+</html>

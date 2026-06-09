@@ -1,0 +1,9 @@
+# 大文件/媒体
+**/files/*
+**/models/*
+*.glb
+*.gltf
+*.exe
+*.docx
+*.zip
+*.tar.gz

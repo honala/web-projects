@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Gallery · honala.xyz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #080a0f;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --accent: #e8a0c8;
+    --accent2: #a0c8e8;
+    --text: #e8e0f0;
+    --text-muted: rgba(232,224,240,0.45);
+    --glow: rgba(232,160,200,0.15);
+    --sidebar-w: 260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ─── Sidebar ─── */
+  #sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10,12,20,0.92);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    z-index: 10;
+    position: relative;
+  }
+
+  #sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .model-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .model-list::-webkit-scrollbar { width: 3px; }
+  .model-list::-webkit-scrollbar-track { background: transparent; }
+  .model-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .model-card {
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .model-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .model-card:hover {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .model-card:hover::before { opacity: 0.04; }
+
+  .model-card.active {
+    background: rgba(232,160,200,0.08);
+    border-color: rgba(232,160,200,0.3);
+  }
+
+  .model-card.active::before { opacity: 0.06; }
+
+  .model-card-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+
+  .model-card.active .model-card-name { color: var(--accent); }
+
+  .model-card-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    position: relative;
+  }
+
+  .model-card-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    vertical-align: middle;
+    margin-top: -1px;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .model-card.active .model-card-dot { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .sidebar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 5px #4ade80;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ─── Viewport ─── */
+  #viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ─── Loading Overlay ─── */
+  #loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,10,15,0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.4s ease;
+  }
+
+  #loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-ring {
+    width: 60px; height: 60px;
+    border: 1px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .loading-ring::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid transparent;
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite reverse;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .loading-bar-wrap {
+    width: 200px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .loading-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 1px;
+    transition: width 0.3s ease;
+    width: 0%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .loading-pct {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── Model Info HUD ─── */
+  #hud {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(8,10,15,0.75);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    backdrop-filter: blur(12px);
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #hud.visible { opacity: 1; }
+
+  #hud .hud-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  #hud .hud-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  #hud .hud-key { color: var(--accent2); }
+
+  /* ─── Controls hint ─── */
+  #controls-hint {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(8,10,15,0.65);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    backdrop-filter: blur(12px);
+    font-size: 9px;
+    color: var(--text-muted);
+    line-height: 2;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  #controls-hint.visible { opacity: 1; }
+
+  .hint-row { display: flex; gap: 10px; align-items: center; }
+  .hint-key {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 8px;
+    color: var(--text);
+  }
+
+  /* ─── Empty / Error state ─── */
+  #empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 2;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  #empty .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  #empty.hidden { display: none; }
+
+  /* ─── No models state ─── */
+  .no-models {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.8;
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── Background atmosphere ─── */
+  #atmosphere {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #atmosphere::before {
+    content: '';
+    position: absolute;
+    top: 20%; left: 30%;
+    width: 40%; height: 40%;
+    background: radial-gradient(ellipse, rgba(232,160,200,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  #atmosphere::after {
+    content: '';
+    position: absolute;
+    bottom: 10%; right: 20%;
+    width: 30%; height: 30%;
+    background: radial-gradient(ellipse, rgba(160,200,232,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ─── Error toast ─── */
+  #toast {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    z-index: 200;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(12px);
+    white-space: nowrap;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── VMD badge ─── */
+  .hint-mobile { display: none; }
+
+  .vmd-badge {
+    display: inline-block;
+    background: rgba(160,200,232,0.15);
+    border: 1px solid rgba(160,200,232,0.3);
+    color: var(--accent2);
+    font-size: 8px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.1em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ─── Hamburger toggle ─── */
+  #menu-toggle {
+    display: none;
+    position: absolute;
+    top: 12px; left: 12px;
+    z-index: 65;
+    width: 36px; height: 36px;
+    background: rgba(8,10,15,0.75);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  #menu-toggle:active { background: var(--surface); }
+
+  /* ─── Mobile: ≤768px ─── */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+
+    /* Sidebar → overlay drawer */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 280px;
+      z-index: 60;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+    #sidebar.open { transform: translateX(0); }
+
+    /* Backdrop */
+    #sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 55;
+    }
+    #sidebar-backdrop.visible { display: block; }
+
+    #menu-toggle { display: flex; }
+
+    #viewport { flex: 1; min-height: 0; }
+
+    /* Model cards — larger touch targets */
+    .model-card { padding: 14px 16px; }
+    .model-card-name { font-size: 14px; }
+
+    .sidebar-header { padding: 20px 16px 14px; }
+
+    /* HUD — bottom aligned, compact */
+    #hud {
+      bottom: 12px; left: 12px; right: 12px;
+      padding: 8px 12px;
+      font-size: 9px;
+    }
+    #hud .hud-name { font-size: 11px; }
+
+    /* Controls hint — touch-style */
+    #controls-hint {
+      top: 12px; right: 12px;
+      padding: 8px 12px;
+      font-size: 8px;
+    }
+
+    /* Toast — wider */
+    #toast {
+      left: 12px; right: 12px;
+      transform: translateY(-80px);
+      white-space: normal; text-align: center;
+    }
+    #toast.show { transform: translateY(0); }
+
+    /* Empty — smaller text */
+    #empty { font-size: 12px; }
+    #empty .empty-icon { font-size: 36px; }
+
+    /* Show mobile hints, hide desktop hints */
+    .hint-mobile { display: flex; }
+    .hint-desktop { display: none; }
+
+    /* Loading — centered */
+    .loading-name { font-size: 14px; }
+    .loading-bar-wrap { width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Sidebar ─── -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">honala.xyz</div>
+    <div class="sidebar-title">模型展示</div>
+    <div class="sidebar-subtitle">MODEL GALLERY · PMX VIEWER</div>
+  </div>
+
+  <div class="model-list" id="model-list">
+    <div class="no-models" id="list-loading">
+      <div style="opacity:0.4;margin-bottom:8px">⟳</div>
+      正在读取模型列表…
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-status">
+      <div class="status-dot"></div>
+      <span id="footer-status">WebGL · Three.js r128</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Viewport ─── -->
+<div id="viewport">
+  <div id="sidebar-backdrop"></div>
+  <button id="menu-toggle" title="模型列表">☰</button>
+  <div id="atmosphere"></div>
+  <canvas id="canvas"></canvas>
+
+  <!-- Empty state -->
+  <div id="empty">
+    <div class="empty-icon">◈</div>
+    <div>← 从左侧选择一个模型</div>
+    <div style="font-size:10px;margin-top:8px;opacity:0.5">左键旋转 · 右键平移 · 滚轮缩放</div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading" class="hidden">
+    <div class="loading-ring"></div>
+    <div class="loading-name" id="loading-name">加载中…</div>
+    <div class="loading-bar-wrap">
+      <div class="loading-bar" id="loading-bar"></div>
+    </div>
+    <div class="loading-pct" id="loading-pct">0%</div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-name" id="hud-name"></div>
+    <div class="hud-row">
+      <span class="hud-key">顶点</span><span id="hud-verts">-</span>&nbsp;
+      <span class="hud-key">面数</span><span id="hud-faces">-</span>&nbsp;
+      <span class="hud-key">材质</span><span id="hud-mats">-</span>
+    </div>
+  </div>
+
+  <!-- Controls hint -->
+  <div id="controls-hint">
+    <div class="hint-row hint-desktop"><span class="hint-key">拖拽</span> 旋转</div>
+    <div class="hint-row hint-desktop"><span class="hint-key">右键</span> 平移</div>
+    <div class="hint-row hint-desktop"><span class="hint-key">滚轮</span> 缩放</div>
+    <div class="hint-row hint-mobile"><span class="hint-key">单指</span> 旋转</div>
+    <div class="hint-row hint-mobile"><span class="hint-key">双指</span> 平移/缩放</div>
+    <div class="hint-row"><span class="hint-key">R</span> 重置视角</div>
+    <div class="hint-row"><span class="hint-key">G</span> 网格开关</div>
+    <div class="hint-row"><span class="hint-key">W</span> 线框模式</div>
+  </div>
+
+  <!-- Error toast -->
+  <div id="toast"></div>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mmd-parser@1.0.1/build/mmdparser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MMDLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/animation/MMDAnimationHelper.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  HONALA PMX VIEWER
+//  models/ 目录结构:
+//    models/
+//      角色名/
+//        角色名.pmx
+//        *.vmd (可选，自动检测)
+//        贴图文件...
+// ═══════════════════════════════════════════════════
+
+const MODELS_PATH = './models/';   // 相对于本页面的模型目录
+
+// ── DOM refs ──
+const canvas       = document.getElementById('canvas');
+const modelList    = document.getElementById('model-list');
+const loadingEl    = document.getElementById('loading');
+const loadingBar   = document.getElementById('loading-bar');
+const loadingPct   = document.getElementById('loading-pct');
+const loadingName  = document.getElementById('loading-name');
+const emptyEl      = document.getElementById('empty');
+const hudEl        = document.getElementById('hud');
+const hudName      = document.getElementById('hud-name');
+const hudVerts     = document.getElementById('hud-verts');
+const hudFaces     = document.getElementById('hud-faces');
+const hudMats      = document.getElementById('hud-mats');
+const hintsEl      = document.getElementById('controls-hint');
+const footerStatus = document.getElementById('footer-status');
+const menuToggle   = document.getElementById('menu-toggle');
+const sidebarEl    = document.getElementById('sidebar');
+
+// ── Sidebar toggle (mobile) ──
+const backdropEl    = document.getElementById('sidebar-backdrop');
+function openSidebar(){sidebarEl.classList.add('open');backdropEl.classList.add('visible');}
+function closeSidebar(){sidebarEl.classList.remove('open');backdropEl.classList.remove('visible');}
+menuToggle.addEventListener('click', (e) => { e.stopPropagation(); if(sidebarEl.classList.contains('open'))closeSidebar();else openSidebar(); });
+backdropEl.addEventListener('click', closeSidebar);
+// Close on Escape
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeSidebar(); });
+const toastEl      = document.getElementById('toast');
+const listLoading  = document.getElementById('list-loading');
+
+// ── Three.js setup ──
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080a0f);
+scene.fog = new THREE.FogExp2(0x080a0f, 0.012);
+
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 500);
+camera.position.set(0, 12, 30);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 3;
+controls.maxDistance = 120;
+controls.target.set(0, 8, 0);
+controls.update();
+
+// ── Lights ──
+const ambientLight = new THREE.AmbientLight(0xffeef8, 0.6);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(8, 20, 12);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 100;
+dirLight.shadow.camera.left = -20;
+dirLight.shadow.camera.right = 20;
+dirLight.shadow.camera.top = 30;
+dirLight.shadow.camera.bottom = -5;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0xa0c8e8, 0.4);
+fillLight.position.set(-6, 8, -8);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xe8a0c8, 0.25);
+rimLight.position.set(0, 15, -20);
+scene.add(rimLight);
+
+// ── Ground / Grid ──
+const gridHelper = new THREE.GridHelper(50, 50, 0x1a1a2e, 0x13131f);
+gridHelper.position.y = 0;
+scene.add(gridHelper);
+
+const groundGeo = new THREE.PlaneGeometry(50, 50);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x080a10,
+  roughness: 0.9,
+  metalness: 0.1,
+  transparent: true,
+  opacity: 0.8
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ── State ──
+let currentModel = null;
+let animHelper   = null;
+let wireframe    = false;
+let gridVisible  = true;
+let activeCard   = null;
+let defaultCamPos, defaultCamTarget;
+
+// ── Resize ──
+function resize() {
+  const vp = document.getElementById('viewport');
+  const w = vp.clientWidth, h = vp.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Render loop ──
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  if (animHelper) animHelper.update(1/60);
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3500);
+}
+
+// ── Loading UI ──
+function showLoading(name) {
+  loadingName.textContent = name;
+  loadingBar.style.width = '0%';
+  loadingPct.textContent = '0%';
+  loadingEl.classList.remove('hidden');
+  emptyEl.classList.add('hidden');
+  hudEl.classList.remove('visible');
+  hintsEl.classList.remove('visible');
+}
+
+function updateProgress(pct) {
+  const p = Math.min(99, Math.round(Math.max(0, pct) * 100));
+  loadingBar.style.width = p + '%';
+  loadingPct.textContent = p + '%';
+}
+
+function hideLoading() {
+  loadingBar.style.width = '100%';
+  loadingPct.textContent = '100%';
+  setTimeout(() => { loadingEl.classList.add('hidden'); }, 300);
+}
+
+// ── Clear current model ──
+function clearModel() {
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+      }
+    });
+    currentModel = null;
+  }
+  if (animHelper) { animHelper = null; }
+}
+
+// ── Fit camera to model ──
+function fitCamera(model) {
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  const height = size.y;
+  const dist   = Math.max(size.x, size.z, height) * 1.8;
+
+  controls.target.set(center.x, center.y * 0.8, center.z);
+  camera.position.set(center.x, center.y * 0.6, center.z + dist);
+  controls.update();
+
+  defaultCamPos    = camera.position.clone();
+  defaultCamTarget = controls.target.clone();
+}
+
+// ── Load PMX model ──
+async function loadModel(folderName, pmxFile, vmdFile) {
+  clearModel();
+  showLoading(folderName);
+
+  const loader = new THREE.MMDLoader();
+  const pmxUrl = MODELS_PATH + encodeURIComponent(folderName) + '/' + encodeURIComponent(pmxFile);
+  const vmdUrl = vmdFile ? MODELS_PATH + encodeURIComponent(folderName) + '/' + encodeURIComponent(vmdFile) : null;
+
+  try {
+    await new Promise((resolve, reject) => {
+      if (vmdUrl) {
+        // 有动作文件 → 加载模型 + 动画
+        loader.loadWithAnimation(
+          pmxUrl, [vmdUrl],
+          (result) => {
+            currentModel = result.mesh;
+            currentModel.castShadow = true;
+            currentModel.receiveShadow = true;
+            scene.add(currentModel);
+
+            animHelper = new THREE.MMDAnimationHelper();
+            animHelper.add(currentModel, { animation: result.animation, physics: false });
+
+            updateModelHUD(folderName, currentModel, true);
+            fitCamera(currentModel);
+            resolve();
+          },
+          (xhr) => updateProgress(xhr.loaded / (xhr.total || 1)),
+          reject
+        );
+      } else {
+        // 仅模型
+        loader.load(
+          pmxUrl,
+          (mesh) => {
+            currentModel = mesh;
+            currentModel.castShadow = true;
+            currentModel.receiveShadow = true;
+            scene.add(currentModel);
+
+            updateModelHUD(folderName, mesh, false);
+            fitCamera(mesh);
+            resolve();
+          },
+          (xhr) => updateProgress(xhr.loaded / (xhr.total || 1)),
+          reject
+        );
+      }
+    });
+
+    hideLoading();
+    emptyEl.classList.add('hidden');
+    hudEl.classList.add('visible');
+    hintsEl.classList.add('visible');
+
+  } catch (err) {
+    hideLoading();
+    emptyEl.classList.remove('hidden');
+    showToast('⚠ 模型加载失败：' + (err.message || err));
+    console.error(err);
+  }
+}
+
+// ── HUD update ──
+function updateModelHUD(name, mesh, hasAnim) {
+  let verts = 0, faces = 0, mats = 0;
+  mesh.traverse(obj => {
+    if (obj.isMesh && obj.geometry) {
+      const geo = obj.geometry;
+      if (geo.attributes.position) verts += geo.attributes.position.count;
+      if (geo.index) faces += geo.index.count / 3;
+      else if (geo.attributes.position) faces += geo.attributes.position.count / 3;
+      mats++;
+    }
+  });
+  hudName.textContent = name + (hasAnim ? ' ▶' : '');
+  hudVerts.textContent = verts.toLocaleString();
+  hudFaces.textContent = Math.round(faces).toLocaleString();
+  hudMats.textContent  = mats;
+}
+
+// ── Keyboard shortcuts ──
+window.addEventListener('keydown', e => {
+  if (!currentModel) return;
+  if (e.key === 'r' || e.key === 'R') {
+    camera.position.copy(defaultCamPos);
+    controls.target.copy(defaultCamTarget);
+    controls.update();
+  }
+  if (e.key === 'g' || e.key === 'G') {
+    gridVisible = !gridVisible;
+    gridHelper.visible = gridVisible;
+    ground.visible = gridVisible;
+  }
+  if (e.key === 'w' || e.key === 'W') {
+    wireframe = !wireframe;
+    currentModel.traverse(obj => {
+      if (obj.isMesh) {
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => { m.wireframe = wireframe; });
+      }
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  MODEL DISCOVERY
+//  需要 nginx: autoindex on; autoindex_format json;
+// ═══════════════════════════════════════════════════
+
+async function fetchDirJson(url) {
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json' }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
+  return res.json();
+}
+
+async function discoverModels() {
+  try {
+    const entries = await fetchDirJson(MODELS_PATH);
+    const folders = entries.filter(e => e.type === 'directory');
+
+    if (folders.length === 0) {
+      listLoading.innerHTML = '<div style="opacity:0.5;font-size:10px;line-height:2">models/ 目录为空<br>请放入模型文件夹</div>';
+      return;
+    }
+
+    listLoading.remove();
+
+    for (const folder of folders) {
+      // 去掉末尾斜杠
+      const folderName = folder.name.replace(/\/$/, '');
+      // 列出文件夹内容
+      let files = [];
+      try {
+        files = await fetchDirJson(MODELS_PATH + encodeURIComponent(folderName) + '/');
+      } catch { continue; }
+
+      const pmxFile = files.find(f => f.name && f.name.toLowerCase().endsWith('.pmx'));
+      if (!pmxFile) continue;
+
+      const vmdFile = files.find(f => f.name && f.name.toLowerCase().endsWith('.vmd'));
+
+      const card = document.createElement('div');
+      card.className = 'model-card';
+      card.innerHTML = `
+        <div class="model-card-name">
+          <span class="model-card-dot"></span>${folderName}${vmdFile ? '<span class="vmd-badge">VMD</span>' : ''}
+        </div>
+        <div class="model-card-meta">${pmxFile.name}${vmdFile ? ' · ' + vmdFile.name : ''}</div>
+      `;
+
+      card.addEventListener('click', () => {
+        if (activeCard) activeCard.classList.remove('active');
+        card.classList.add('active');
+        activeCard = card;
+        closeSidebar(); // auto-close sidebar on mobile
+        loadModel(folderName, pmxFile.name, vmdFile ? vmdFile.name : null);
+      });
+
+      modelList.appendChild(card);
+    }
+
+    footerStatus.textContent = `${folders.filter(f => {
+      // just show count
+      return true;
+    }).length} 个模型 · WebGL`;
+
+  } catch (err) {
+    listLoading.innerHTML = `
+      <div style="color:#fca5a5;font-size:10px;line-height:2;padding:8px">
+        ⚠ 读取失败<br>
+        请确认 nginx 已开启<br>
+        autoindex + json 格式
+      </div>
+    `;
+    console.error('Model discovery failed:', err);
+    showToast('⚠ 无法读取 models/ 目录，请检查 nginx 配置');
+  }
+}
+
+// ── Init ──
+discoverModels();
+</script>
+</body>
+</html>

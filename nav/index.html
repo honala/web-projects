@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>honala.xyz</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://honala.xyz/">
+<meta property="og:title" content="honala.xyz - 首页">
+<meta property="og:description" content="honala 站点导航 - chat / photos / lab / cloud 入口">
+<meta property="og:image" content="https://honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="honala.xyz - 首页">
+<meta name="twitter:image" content="https://honala.xyz/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&family=Noto+Serif+SC:wght@600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f6f4f0;
+  --card: #fff;
+  --border: #e5e0d8;
+  --text: #1c1b19;
+  --muted: #7a756c;
+  --accent: #c9472f;
+  --accent-soft: rgba(201,71,47,0.1);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Noto Sans SC", system-ui, sans-serif;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 56px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.topbar {
+  width: 100%;
+  max-width: 880px;
+  padding: clamp(24px, 5vw, 40px) 20px 0;
+  animation: fadeUp 0.4s ease both;
+}
+
+.logo-wrap {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.logo-wrap svg {
+  width: clamp(80px, 16vw, 120px);
+  height: auto;
+  display: block;
+}
+
+header {
+  text-align: center;
+  margin: clamp(32px, 6vw, 56px) 0 48px;
+  max-width: 480px;
+  padding: 0 20px;
+  animation: fadeUp 0.5s ease 0.05s both;
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.eyebrow::before, .eyebrow::after {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+h1 {
+  font-family: "Noto Serif SC", serif;
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.content {
+  width: 100%;
+  max-width: 880px;
+  padding: 0 20px;
+  flex: 1;
+}
+
+.section-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.grid + .section-title { margin-top: 36px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 14px;
+}
+
+a.card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  padding: 20px 20px 18px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+}
+
+a.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  border-left-color: var(--accent);
+  border-top-color: #d8d2c8;
+  border-right-color: #d8d2c8;
+  border-bottom-color: #d8d2c8;
+}
+
+.card-icon {
+  font-size: 22px;
+  margin-bottom: 10px;
+  line-height: 1;
+  display: block;
+}
+
+.card-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.card-title {
+  font-size: 15.5px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+a.card:hover .card-title { color: var(--accent); }
+
+.card-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-top: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+footer {
+  width: 100%;
+  max-width: 880px;
+  padding: 48px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-copy {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+}
+
+.powered-by {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  opacity: 0.38;
+  transition: opacity 0.2s ease;
+}
+
+.powered-by:hover { opacity: 0.68; }
+
+.powered-by-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.wordmark {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.wordmark:hover { color: var(--accent); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.grid a.card { animation: fadeUp 0.4s ease both; }
+.grid a.card:nth-child(1) { animation-delay: 0.08s; }
+.grid a.card:nth-child(2) { animation-delay: 0.15s; }
+.grid a.card:nth-child(3) { animation-delay: 0.22s; }
+.grid a.card:nth-child(4) { animation-delay: 0.29s; }
+.grid a.card:nth-child(5) { animation-delay: 0.36s; }
+.grid a.card:nth-child(6) { animation-delay: 0.43s; }
+.grid a.card:nth-child(7) { animation-delay: 0.50s; }
+
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+  footer { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="logo-wrap" aria-label="honala.xyz">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 225 100" role="img" aria-label="honala">
+      <text x="4" y="78" font-family="Syne, sans-serif" font-size="52" font-weight="700"
+            letter-spacing="-1" fill="#111111" text-anchor="start">honala</text>
+      <circle cx="207" cy="43" r="6" fill="#0066ff"/>
+    </svg>
+  </a>
+</div>
+
+<header>
+  <div class="eyebrow">honala.xyz</div>
+  <h1>欢迎</h1>
+  <p class="sub">这里是 honala 的个人空间，随便逛逛</p>
+</header>
+
+<div class="content">
+  <div class="section-title">常用入口</div>
+  <nav class="grid" aria-label="站点导航">
+    <a class="card" href="https://chat.honala.xyz/">
+      <span class="card-icon">💬</span>
+      <div class="card-label">chat</div>
+      <div class="card-title">AI 对话</div>
+      <div class="card-desc">本地 Ollama 驱动的 AI 聊天，运行在 RTX 4070 上</div>
+    </a>
+    <a class="card" href="https://photos.honala.xyz/">
+      <span class="card-icon">📷</span>
+      <div class="card-label">photos</div>
+      <div class="card-title">摄影作品</div>
+      <div class="card-desc" id="photos-desc">朋友们的作品画廊</div>
+      <span class="pill" id="photos-pill" style="display:none"></span>
+    </a>
+    <a class="card" id="mail-card" href="#">
+      <span class="card-icon">✉️</span>
+      <div class="card-label">mail</div>
+      <div class="card-title">联系</div>
+      <div class="card-desc">hi@honala.xyz ・ 转发至 Outlook</div>
+    </a>
+  </nav>
+
+  <div class="section-title">更多节点</div>
+  <nav class="grid" aria-label="更多服务">
+    <a class="card" href="https://games.honala.xyz/">
+      <span class="card-icon">🎮</span>
+      <div class="card-label">games</div>
+      <div class="card-title">游戏导航</div>
+      <div class="card-desc">统一入口： game1 / game2 / game3 / game4</div>
+    </a>
+    <a class="card" href="https://www.honala.xyz/">
+      <span class="card-icon">🏠</span>
+      <div class="card-label">www</div>
+      <div class="card-title">个人主页</div>
+      <div class="card-desc">作品展示与个人档案，运行在本地服务器上</div>
+    </a>
+    <a class="card" href="https://lab.honala.xyz/">
+      <span class="card-icon">🧪</span>
+      <div class="card-label">lab</div>
+      <div class="card-title">实验室</div>
+      <div class="card-desc">各种折腾中的小项目与技术实验</div>
+    </a>
+    <a class="card" href="https://cloud.honala.xyz/">
+      <span class="card-icon">☁️</span>
+      <div class="card-label">cloud</div>
+      <div class="card-title">私有云</div>
+      <div class="card-desc">绿联 NAS 云存储节点，建设中</div>
+      <span class="pill">即将上线</span>
+    </a>
+    <a class="card" href="https://download.honala.xyz/">
+      <span class="card-icon">⬇️</span>
+      <div class="card-label">download</div>
+      <div class="card-title">下载</div>
+      <div class="card-desc" id="download-desc">文件下载 / 资源分享</div>
+      <span class="pill" id="download-pill" style="display:none"></span>
+    </a>
+    <a class="card" href="https://flix.honala.xyz/">
+      <span class="card-icon">🎬</span>
+      <div class="card-label">flix</div>
+      <div class="card-title">私人影院</div>
+      <div class="card-desc">HLS 视频流播放器</div>
+    </a>
+    <a class="card" href="https://3d.honala.xyz/">
+      <span class="card-icon">🌐</span>
+      <div class="card-label">3d</div>
+      <div class="card-title">模型展示</div>
+      <div class="card-desc">基于 Three.js 的 MMD / PMX 实时 3D 渲染</div>
+    </a>
+  </nav>
+</div>
+
+<footer>
+  <span class="footer-copy">// honala.xyz //</span>
+  <div class="powered-by">
+    <span class="powered-by-label">powered by</span>
+    <a class="wordmark" href="https://www.anthropic.com" target="_blank" rel="noopener">Anthropic</a>
+    <a class="wordmark" href="https://openai.com" target="_blank" rel="noopener">OpenAI</a>
+    <a class="wordmark" href="https://about.google" target="_blank" rel="noopener">Google</a>
+    <a class="wordmark" href="https://deepseek.com" target="_blank" rel="noopener">DeepSeek</a>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script>
+(function() {
+  var el = document.getElementById("mail-card");
+  if (el) el.href = "mai" + "lto:" + "hi" + "\x40" + "honala.xyz";
+})();
+
+(async function() {
+  async function countFiles(url) {
+    try {
+      var r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) return null;
+      var j = await r.json();
+      if (!Array.isArray(j)) return null;
+      return j.filter(function(x) { return x && x.type === "file"; }).length;
+    } catch {
+      return null;
+    }
+  }
+
+  /** 与画廊一致：只计未在 meta.json 里标记 hidden 的图片 */
+  async function countVisiblePhotos(filesUrl, metaUrl) {
+    try {
+      var rFiles = await fetch(filesUrl, { cache: "no-store" });
+      if (!rFiles.ok) return null;
+      var jFiles = await rFiles.json();
+      if (!Array.isArray(jFiles)) return null;
+      var meta = { photos: {} };
+      try {
+        var rMeta = await fetch(metaUrl, { cache: "no-store" });
+        if (rMeta.ok) meta = await rMeta.json();
+      } catch {}
+      var photos = (meta && meta.photos) || {};
+      function isImg(n) { return /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(n || ""); }
+      var n = 0;
+      for (var i = 0; i < jFiles.length; i++) {
+        var x = jFiles[i];
+        if (!x || x.type !== "file" || !isImg(x.name)) continue;
+        var name = String(x.name).split("/").pop();
+        var m = photos[name];
+        if (m && m.hidden === true) continue;
+        n++;
+      }
+      return n;
+    } catch {
+      return null;
+    }
+  }
+
+  var photosCount = await countVisiblePhotos("https://photos.honala.xyz/files/", "https://photos.honala.xyz/meta.json");
+  if (typeof photosCount !== "number") {
+    photosCount = await countFiles("https://photos.honala.xyz/files/");
+  }
+  if (typeof photosCount === "number") {
+    var pill = document.getElementById("photos-pill");
+    if (pill) {
+      pill.textContent = photosCount + " items";
+      pill.style.display = "inline-flex";
+    }
+  }
+
+  var dlCount = await countFiles("https://download.honala.xyz/files/");
+  if (typeof dlCount === "number") {
+    var pill2 = document.getElementById("download-pill");
+    if (pill2) {
+      pill2.textContent = dlCount + " files";
+      pill2.style.display = "inline-flex";
+    }
+  }
+})();
+</script>
+
+
+<footer style="text-align:center;padding:40px 20px 30px;font-size:12px;color:var(--muted,#7a756c)">
+  <a href="#" style="color:inherit;text-decoration:none">隐私政策</a>
+  <span style="margin:0 10px">|</span>
+  <a href="#" style="color:inherit;text-decoration:none">法律信息</a>
+  <span style="margin:0 10px">|</span>
+  <a href="#" style="color:inherit;text-decoration:none">Cookie 管理</a>
+</footer>
+</body>
+</html>

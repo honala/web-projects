@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HONALA // FILE TRANSFER</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://download.honala.xyz/">
+<meta property="og:title" content="honala · Downloads">
+<meta property="og:description" content="文件下载 / 分享入口">
+<meta property="og:image" content="https://download.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="honala · Downloads">
+<meta name="twitter:image" content="https://download.honala.xyz/favicon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg:        #05050d;
+    --bg2:       #0b0b18;
+    --panel:     #0d0d1f;
+    --border:    #1a1a3a;
+    --cyan:      #00d4ff;
+    --blue:      #2979ff;
+    --gold:      #d4a017;
+    --red:       #ff3060;
+    --green:     #00ff88;
+    --text:      #c8cfe8;
+    --muted:     #4a5070;
+    --glow-c:    0 0 8px #00d4ff88, 0 0 24px #00d4ff33;
+    --glow-b:    0 0 8px #2979ff88, 0 0 24px #2979ff33;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── scanline overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 999; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,.12) 2px,
+      rgba(0,0,0,.12) 4px
+    );
+  }
+
+  /* ── grid bg ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridScroll 20s linear infinite;
+  }
+
+  @keyframes gridScroll {
+    from { background-position: 0 0; }
+    to   { background-position: 0 40px; }
+  }
+
+  /* ── corner brackets ── */
+  .corner {
+    position: fixed; width: 24px; height: 24px;
+    border-color: var(--cyan); border-style: solid; opacity: .45;
+    z-index: 100; pointer-events: none;
+  }
+  .corner.tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; }
+  .corner.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
+
+  /* ── layout ── */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 900px; margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  /* ── header ── */
+  header { margin-bottom: 56px; }
+
+  .site-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .2em;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .site-label span { color: var(--blue); }
+
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1; letter-spacing: .04em;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(0,212,255,.25);
+    margin-bottom: 8px;
+  }
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .tagline {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: var(--muted); letter-spacing: .12em;
+  }
+  .tagline::before { content: '> '; color: var(--cyan); }
+
+  /* ── section title ── */
+  .section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .2em; color: var(--cyan);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ── filter bar ── */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .1em;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0,212,255,.06);
+  }
+
+  /* ── stats bar ── */
+  .stats-bar {
+    display: flex; gap: 32px; flex-wrap: wrap;
+    margin-bottom: 40px;
+    padding: 16px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+  }
+  .stat {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .stat-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px; color: #fff;
+  }
+  .stat-val span { color: var(--cyan); }
+  .stat-lbl {
+    font-size: 10px; letter-spacing: .15em;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  /* ── file grid ── */
+  #file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2px;
+  }
+
+  /* ── file card ── */
+  .file-card {
+    position: relative; overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    text-decoration: none; color: inherit; display: block;
+  }
+  .file-card:hover {
+    border-color: var(--cyan);
+    background: #0d0d23;
+  }
+  .file-card::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,.04), transparent);
+    transition: left .45s;
+  }
+  .file-card:hover::before { left: 150%; }
+
+  /* accent line */
+  .file-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+    transition: width .3s;
+  }
+  .file-card:hover::after { width: 100%; }
+
+  .card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .file-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,212,255,.06);
+    border: 1px solid var(--border);
+    font-size: 18px;
+    transition: background .2s;
+  }
+  .file-card:hover .file-icon { background: rgba(0,212,255,.13); }
+  .file-icon img { width: 22px; height: 22px; display: block; }
+
+  .file-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: .12em;
+    padding: 3px 7px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .badge-free  { color: var(--cyan); border-color: var(--cyan); }
+  .badge-bin   { color: var(--blue); border-color: var(--blue); }
+  .badge-src   { color: var(--gold); border-color: var(--gold); }
+  .badge-doc   { color: #a78bfa;    border-color: #a78bfa; }
+  .badge-arc   { color: var(--red); border-color: var(--red); }
+
+  .file-name {
+    font-weight: 700; font-size: 17px;
+    color: #fff; line-height: 1.2;
+    margin-bottom: 6px;
+    font-family: 'Rajdhani', sans-serif; letter-spacing: .02em;
+  }
+  .file-desc {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.5; margin-bottom: 16px;
+  }
+
+  .card-meta {
+    display: flex; align-items: center; gap: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--muted);
+  }
+  .meta-size { color: var(--text); }
+  .meta-dot  { color: var(--border); }
+
+  .dl-btn {
+    margin-left: auto; display: flex; align-items: center; gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .1em;
+    color: var(--cyan);
+    background: rgba(0,212,255,.07);
+    border: 1px solid rgba(0,212,255,.3);
+    padding: 5px 12px;
+    text-decoration: none;
+    transition: background .2s, box-shadow .2s, color .2s;
+    pointer-events: auto;
+  }
+  .file-card:hover .dl-btn {
+    background: rgba(0,212,255,.15);
+    box-shadow: var(--glow-c);
+    color: #fff;
+  }
+  .dl-arrow { transition: transform .2s; }
+  .file-card:hover .dl-arrow { transform: translateY(2px); }
+
+  /* ── details modal ── */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,.72);
+    backdrop-filter: blur(6px);
+    padding: 22px;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal.open { display: flex; }
+  .modal-panel {
+    width: min(720px, 96vw);
+    background: #0b0b18;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 40px rgba(0,212,255,.08);
+    padding: 18px;
+  }
+  .modal-top { display:flex; align-items:flex-start; justify-content:space-between; gap: 14px; }
+  .modal-title { font-family:'Rajdhani', sans-serif; font-weight: 700; font-size: 22px; color: #fff; }
+  .modal-sub { margin-top: 6px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .modal-meta { margin-top: 12px; font-family:'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing:.06em; display:flex; gap: 12px; flex-wrap: wrap; }
+  .xbtn {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .xbtn:hover { color: #fff; border-color: rgba(0,212,255,.35); }
+  .modal-actions { display:flex; gap: 10px; justify-content:flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .btn2 {
+    font-family:'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .1em;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: rgba(0,212,255,.06);
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn2.primary { border-color: rgba(0,212,255,.35); box-shadow: var(--glow-c); }
+  .btn2:hover { border-color: var(--cyan); }
+
+  /* ── empty state ── */
+  #empty-state {
+    grid-column: 1/-1;
+    padding: 60px 24px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+  }
+  #empty-state .mono {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; letter-spacing: .1em;
+    margin-bottom: 8px; color: var(--blue);
+  }
+
+  /* status msg */
+  #status-msg {
+    grid-column: 1/-1;
+    padding: 60px 24px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: .1em;
+    line-height: 2;
+  }
+  #status-msg .accent { color: var(--cyan); }
+  #status-msg .err { color: var(--red); }
+  .scan-bar { width: 180px; height: 2px; background: var(--border); margin: 14px auto 0; overflow: hidden; }
+  .scan-bar-inner { height: 100%; width: 40%; background: linear-gradient(90deg, transparent, var(--cyan)); animation: scan 1s linear infinite; }
+  @keyframes scan { from{margin-left:-40%} to{margin-left:100%} }
+
+  /* file type tag */
+  .file-type-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .1em;
+    padding: 3px 7px;
+    border: 1px solid;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── notice ── */
+  .notice {
+    margin-top: 40px; padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    background: var(--panel);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    line-height: 1.8; letter-spacing: .06em;
+  }
+  .notice strong { color: var(--gold); }
+
+  /* ── footer ── */
+  footer {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    height: 36px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 20px;
+    background: rgba(5,5,13,.92);
+    border-top: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: .12em;
+    backdrop-filter: blur(6px);
+  }
+  footer .pulse { color: var(--cyan); animation: blink 1.4s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── animations ── */
+  .fade-in {
+    opacity: 0; transform: translateY(16px);
+    animation: fadeUp .5s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 540px) {
+    #file-grid { grid-template-columns: 1fr; }
+    .stats-bar { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="wrapper">
+
+  <header class="fade-in">
+    <p class="site-label">HONALA<span>.XYZ</span> // FILE_TRANSFER_PROTOCOL v1</p>
+    <h1>DOWN<em>LOAD</em></h1>
+    <p class="tagline">scanning transfer node… select a package to initiate</p>
+  </header>
+
+  <div class="stats-bar fade-in" style="animation-delay:.1s">
+    <div class="stat">
+      <span class="stat-val" id="stat-count"><span>0</span></span>
+      <span class="stat-lbl">Packages</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="stat-total"><span>—</span></span>
+      <span class="stat-lbl">Total Size</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val"><span id="stat-status" style="color:var(--muted)">…</span></span>
+      <span class="stat-lbl">Node Status</span>
+    </div>
+  </div>
+
+  <p class="section-title fade-in" style="animation-delay:.15s">AVAILABLE PACKAGES</p>
+
+  <div class="filter-bar fade-in" id="filter-bar" style="animation-delay:.18s; display:none"></div>
+
+  <div id="file-grid" class="fade-in" style="animation-delay:.2s">
+    <div id="status-msg">
+      <div class="accent">// SCANNING DIRECTORY</div>
+      <div class="scan-bar"><div class="scan-bar-inner"></div></div>
+    </div>
+  </div>
+
+  <div class="notice fade-in" style="animation-delay:.25s">
+    <strong>NOTICE //</strong> All files are provided as-is.
+    Verify checksums after download. honala.xyz is not responsible for data
+    loss or system instability. <strong>USE AT YOUR OWN RISK.</strong>
+  </div>
+
+</div>
+
+<footer>
+  <span><span class="pulse">■</span> HONALA TRANSFER NODE</span>
+  <span id="clock"></span>
+  <span>ENCRYPTED CHANNEL ACTIVE</span>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-label="File details">
+    <div class="modal-top">
+      <div>
+        <div class="modal-title" id="m-title">—</div>
+        <div class="modal-sub" id="m-desc">—</div>
+        <div class="modal-meta" id="m-meta"></div>
+        <div id="m-preview" style="display:none;margin-top:14px;border:1px solid var(--border);background:#05050d;padding:10px">
+          <img id="m-preview-img" alt="" style="width:100%;max-height:52vh;object-fit:contain;display:block">
+        </div>
+      </div>
+      <button class="xbtn" id="m-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-actions">
+      <a class="btn2" id="m-open" href="#" target="_blank" rel="noopener">OPEN</a>
+      <a class="btn2 primary" id="m-dl" href="#" download>DOWNLOAD</a>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadMeta() {
+  try {
+    const r = await fetch("./meta.json", { cache: "no-store" });
+    if (!r.ok) return {};
+    const j = await r.json();
+    return (j && j.files) ? j.files : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function bytesToHuman(bytes) {
+  const u = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0;
+  let v = Number(bytes || 0);
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  const n = (i === 0) ? String(Math.round(v)) : (v >= 10 ? v.toFixed(1) : v.toFixed(2));
+  return `${n} ${u[i]}`;
+}
+
+function parseNginxTime(s) {
+  // Nginx autoindex localtime formats like: "07-Apr-2026 20:12"
+  const m = String(s || "").match(/^(\d{2})-([A-Za-z]{3})-(\d{4})/);
+  if (!m) return String(s || "");
+  const [_, dd, mon, yyyy] = m;
+  const map = { Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",Jul:"07",Aug:"08",Sep:"09",Oct:"10",Nov:"11",Dec:"12" };
+  const mm = map[mon] || "01";
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getExt(name) {
+  const m = String(name || "").match(/\.([^.]+)$/);
+  return m ? m[1].toLowerCase() : "";
+}
+
+function svgData(svg) {
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+const ICON_SVGS = {
+  pdf:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#a78bfa"/><path d="M22 44V22h10q6 0 6 6t-6 6h-4v10z" fill="#070712"/><path d="M40 44V22h10v6h-4v3h4v6h-4v7z" fill="#070712"/></svg>`),
+  zip:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#ff3060"/><path d="M30 14h4v6h-4zm0 10h4v6h-4zm0 10h4v6h-4zm0 10h4v6h-4z" fill="#070712"/><rect x="26" y="44" width="12" height="8" rx="3" fill="#070712"/></svg>`),
+  exe:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#2979ff"/><path d="M22 44V22h10q6 0 6 6t-6 6h-4v10z" fill="#070712"/><path d="M40 44l4-7-4-7h6l1.6 3 1.6-3h6l-4 7 4 7h-6l-1.6-3-1.6 3z" fill="#070712"/></svg>`),
+  msi:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#2979ff"/><path d="M20 46V22h6l6 12 6-12h6v24h-6V34l-6 12-6-12v12z" fill="#070712"/></svg>`),
+  doc:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#2563eb"/><path d="M22 44V22h9q7 0 7 11t-7 11z" fill="#070712"/><path d="M45 44q-8 0-8-11t8-11v6q-3 0-3 5t3 5z" fill="#070712"/></svg>`),
+  ppt:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#ea580c"/><path d="M22 44V22h10q6 0 6 6t-6 6h-4v10z" fill="#070712"/><path d="M41 44V22h6v22z" fill="#070712"/></svg>`),
+  xls:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#16a34a"/><path d="M22 44l6-11-6-11h6l3 6 3-6h6l-6 11 6 11h-6l-3-6-3 6z" fill="#070712"/><path d="M46 44V22h6v22z" fill="#070712"/></svg>`),
+  mp3:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#06b6d4"/><path d="M28 22v18a6 6 0 1 1-3-5.2V20h18v6H28z" fill="#070712"/></svg>`),
+  wav:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#22c55e"/><path d="M22 40V24h4l4 10 4-10h4l4 10 4-10h4v16h-4V32l-4 10h-2l-4-10-4 10h-2l-4-10v8z" fill="#070712"/></svg>`),
+  flac: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#a78bfa"/><path d="M24 44V22h6v16h10v6z" fill="#070712"/><path d="M42 44V22h6v22z" fill="#070712"/></svg>`),
+  m4a:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#f59e0b"/><path d="M28 22v18a6 6 0 1 1-3-5.2V20h18v6H28z" fill="#070712"/><path d="M44 44V30h-4v-4h8v18z" fill="#070712"/></svg>`),
+  aac:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#0ea5e9"/><path d="M26 44V22h6v16h10v6z" fill="#070712"/><path d="M44 44q-8 0-8-11t8-11v6q-3 0-3 5t3 5z" fill="#070712"/></svg>`),
+  ogg:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#10b981"/><path d="M30 44q-8 0-8-11t8-11q8 0 8 11t-8 11zm0-6q3 0 3-5t-3-5q-3 0-3 5t3 5z" fill="#070712"/></svg>`),
+  mp4:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#d4a017"/><path d="M26 44V22h6v22z" fill="#070712"/><path d="M36 44V22l16 11z" fill="#070712"/></svg>`),
+  mkv:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#f97316"/><path d="M22 44V22h6l4 8 4-8h6v22h-6V34l-4 8-4-8v10z" fill="#070712"/></svg>`),
+  mov:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#60a5fa"/><path d="M22 44V22h6l4 8 4-8h6v22h-6V34l-4 8-4-8v10z" fill="#070712"/></svg>`),
+  avi:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#ef4444"/><path d="M24 44V22h6v22z" fill="#070712"/><path d="M34 22h6l4 22h-6l-.7-4H35l-.7 4h-6zm2.1 12h2.8L37.5 26z" fill="#070712"/></svg>`),
+  webm: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#34d399"/><path d="M22 44V22h6v22z" fill="#070712"/><path d="M32 44V22l18 11z" fill="#070712"/></svg>`),
+  pic:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#38bdf8"/><circle cx="24" cy="20" r="5" fill="#070712"/><path d="M16 44l10-14 8 10 10-16 8 20z" fill="#070712"/></svg>`),
+  txt:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#94a3b8"/><path d="M22 22h20M22 30h20M22 38h12" stroke="#070712" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46h16" stroke="#070712" stroke-width="2.5" stroke-linecap="round" opacity=".45"/></svg>`),
+  code: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#22c55e"/><path d="M24 44l-8-11 8-11M40 44l8-11-8-11" stroke="#070712" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`),
+  csv:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#15803d"/><path d="M20 22h24v6H20zm0 10h24v6H20zm0 10h24v6H20z" fill="#070712"/><path d="M20 22v22M32 22v22M44 22v22" stroke="#bbf7d0" stroke-width="1" opacity=".35"/></svg>`),
+  iso:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#eab308"/><circle cx="32" cy="32" r="14" fill="none" stroke="#070712" stroke-width="3"/><circle cx="32" cy="32" r="5" fill="#070712"/></svg>`),
+  rar:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#a855f7"/><path d="M28 14h4v6h-4zm0 10h4v6h-4zm0 10h4v6h-4z" fill="#070712"/><path d="M36 20h12v28H36V36h8v-4h-8v-4h8v-4h-8z" fill="#070712"/></svg>`),
+  seven: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#f97316"/><path d="M26 22h12v5h-7l-1 8h9v5H22v-5h6l1-8h-3v-5z" fill="#070712"/></svg>`),
+  targz: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#92400e"/><path d="M22 18h8v28h-8zm12 8h12v4H34zm0 10h10v4H34z" fill="#070712"/></svg>`),
+  gzip: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#db2777"/><path d="M30 14h4v8h-4zm0 12h4v8h-4zm0 12h4v8h-4z" fill="#070712"/><rect x="26" y="44" width="12" height="8" rx="2" fill="#070712"/></svg>`),
+  font: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#c026d3"/><path d="M28 44l4-22h4l4 22h-5l-1-6h-4l-1 6zm3.5-11h3l-1.5-8z" fill="#070712"/></svg>`),
+  epub: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#78716c"/><path d="M22 22h20v4H22zm0 8c6 0 10 2 10 2s4-2 10-2v16c-6 0-10-2-10-2s-4 2-10 2z" fill="#070712"/></svg>`),
+  apk:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#84cc16"/><path d="M24 26h16v14H24zm4-6l2-6h4l2 6" stroke="#070712" stroke-width="2" fill="none"/><circle cx="27" cy="33" r="2" fill="#070712"/><circle cx="37" cy="33" r="2" fill="#070712"/><path d="M28 38h8" stroke="#070712" stroke-width="2"/></svg>`),
+  sqlite: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#64748b"/><ellipse cx="32" cy="22" rx="14" ry="5" fill="#070712"/><path d="M18 22v20c0 3 6 5 14 5s14-2 14-5V22" fill="none" stroke="#070712" stroke-width="2"/><ellipse cx="32" cy="42" rx="14" ry="5" fill="#070712"/></svg>`),
+  srt:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#0d9488"/><path d="M18 24h28v4H18zm0 10h22v4H18zm0 10h26v4H18z" fill="#070712"/><rect x="20" y="30" width="24" height="12" rx="2" fill="none" stroke="#5eead4" stroke-width="1.5"/></svg>`),
+  wasm: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#654ff0"/><path d="M22 36l4-14h4l3 10 3-10h4l4 14h-4l-2-7-2 7zm16 0l6-14h6l-3 7 3 7z" fill="#070712"/></svg>`),
+  torrent: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#14b8a6"/><path d="M32 18v8M32 30v8M32 42v4" stroke="#070712" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="32" r="12" fill="none" stroke="#070712" stroke-width="2" stroke-dasharray="4 3"/></svg>`),
+  psd:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#0ea5e9"/><path d="M22 44V22h8q6 0 6 7 0 5-4 6l5 9h-6l-4-7h-1v7zm6-13h2q2 0 2-3 0-3-2-3h-2z" fill="#070712"/></svg>`),
+  blend: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#ea580c"/><path d="M32 20l12 7v14l-12 7-12-7V27zm0 4.5L24 31v9l8 4.7 8-4.7V31z" fill="#070712"/></svg>`),
+  msix: svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#0078d4"/><path d="M20 22h10v10H20zm14 0h10v10H34zM20 36h10v10H20zm14 0h10v10H34z" fill="#070712"/></svg>`),
+  odt:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#2563eb"/><path d="M22 44V22h9q7 0 7 9 0 8-6 8H28v5z" fill="#070712"/><path d="M40 44V22h6v22z" fill="#070712"/></svg>`),
+  ods:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#16a34a"/><path d="M22 44l6-11-6-11h6l3 6 3-6h6l-6 11 6 11h-6l-3-6-3 6z" fill="#070712"/><path d="M44 44V22h6v22z" fill="#070712"/></svg>`),
+  odp:  svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#ea580c"/><path d="M22 44V22h10q6 0 6 6t-6 6h-4v10z" fill="#070712"/><circle cx="44" cy="33" r="7" fill="#070712"/></svg>`),
+  ai:   svgData(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="10" y="8" width="44" height="48" rx="10" fill="#f97316"/><path d="M22 44V24h6l4 14 4-14h6v20h-5V30l-3 14h-4L27 30v14z" fill="#070712"/></svg>`),
+};
+ICON_SVGS.docx = ICON_SVGS.doc;
+ICON_SVGS.pptx = ICON_SVGS.ppt;
+ICON_SVGS.xlsx = ICON_SVGS.xls;
+ICON_SVGS.m4v = ICON_SVGS.mp4;
+ICON_SVGS["7z"] = ICON_SVGS.seven;
+ICON_SVGS.tar = ICON_SVGS.targz;
+ICON_SVGS.gz = ICON_SVGS.gzip;
+["jpg","jpeg","png","webp","gif","bmp","avif","ico","heic","tif","tiff"].forEach(function (e) { ICON_SVGS[e] = ICON_SVGS.pic; });
+ICON_SVGS.svg = ICON_SVGS.pic;
+ICON_SVGS.img = ICON_SVGS.iso;
+ICON_SVGS.dmg = ICON_SVGS.iso;
+ICON_SVGS.md = ICON_SVGS.txt;
+ICON_SVGS.log = ICON_SVGS.txt;
+ICON_SVGS.rst = ICON_SVGS.txt;
+["json","xml","yaml","yml","toml","ini","cfg","conf","py","js","mjs","cjs","ts","tsx","jsx","vue","svelte","html","htm","css","scss","sass","less","c","cc","cpp","cxx","h","hpp","cs","java","go","rs","php","rb","swift","kt","kts","sql","pl","lua","r","dart","scala","clj","sh","bash","zsh","bat","cmd","ps1","gradle","cmake","lock","dockerignore","gitignore","env"].forEach(function (e) { ICON_SVGS[e] = ICON_SVGS.code; });
+ICON_SVGS.tsv = ICON_SVGS.csv;
+ICON_SVGS.vtt = ICON_SVGS.srt;
+ICON_SVGS.ass = ICON_SVGS.srt;
+ICON_SVGS.ssa = ICON_SVGS.srt;
+ICON_SVGS.mobi = ICON_SVGS.epub;
+ICON_SVGS.azw3 = ICON_SVGS.epub;
+ICON_SVGS.ttf = ICON_SVGS.otf = ICON_SVGS.woff = ICON_SVGS.woff2 = ICON_SVGS.eot = ICON_SVGS.font;
+ICON_SVGS.db = ICON_SVGS.sqlite;
+ICON_SVGS.ipa = ICON_SVGS.apk;
+ICON_SVGS.pages = ICON_SVGS.odt;
+ICON_SVGS.numbers = ICON_SVGS.ods;
+ICON_SVGS.key = ICON_SVGS.odp;
+
+const EXT_META = {
+  zip:  { color:"#ff3060", label:"ZIP"  }, gz: { color:"#db2777", label:"GZIP" },
+  tar:  { color:"#92400e", label:"TAR"  }, "7z":{ color:"#f97316", label:"7Z" },
+  rar:  { color:"#a855f7", label:"RAR"  }, exe:{ color:"#2979ff", label:"EXE" },
+  msi:  { color:"#2979ff", label:"MSI"  }, msix:{ color:"#0078d4", label:"MSIX" },
+  pdf:  { color:"#a78bfa", label:"PDF"  }, txt:{ color:"#94a3b8", label:"TXT" },
+  md:   { color:"#94a3b8", label:"MD"   }, png:{ color:"#38bdf8", label:"PNG"  },
+  jpg:  { color:"#38bdf8", label:"JPG"  }, jpeg:{ color:"#38bdf8", label:"JPEG" },
+  webp:{ color:"#38bdf8", label:"WEBP" }, gif:{ color:"#38bdf8", label:"GIF"  },
+  bmp:{ color:"#38bdf8", label:"BMP"  }, avif:{ color:"#38bdf8", label:"AVIF" },
+  ico:{ color:"#38bdf8", label:"ICO"  }, heic:{ color:"#38bdf8", label:"HEIC" },
+  tif:{ color:"#38bdf8", label:"TIF"  }, tiff:{ color:"#38bdf8", label:"TIFF" },
+  svg:  { color:"#38bdf8", label:"SVG"  },
+  mp3:  { color:"#06b6d4", label:"MP3"  }, wav:{ color:"#00ff88", label:"WAV"  },
+  flac: { color:"#a78bfa", label:"FLAC" }, m4a:{ color:"#d4a017", label:"M4A"  },
+  aac:  { color:"#2979ff", label:"AAC"  }, ogg:{ color:"#00ff88", label:"OGG"  },
+  mp4:  { color:"#d4a017", label:"MP4"  }, m4v:{ color:"#d4a017", label:"M4V"  },
+  mkv:{ color:"#d4a017", label:"MKV"  },
+  mov:  { color:"#d4a017", label:"MOV"  }, avi:{ color:"#d4a017", label:"AVI"  },
+  webm: { color:"#34d399", label:"WEBM" },
+  iso:  { color:"#eab308", label:"ISO"  }, img:{ color:"#eab308", label:"DISK" },
+  dmg:  { color:"#eab308", label:"DMG"  },
+  py:   { color:"#22c55e", label:"PY"   }, js:{ color:"#22c55e", label:"JS"   },
+  ts:   { color:"#22c55e", label:"TS"   }, json:{ color:"#22c55e", label:"JSON" },
+  html: { color:"#22c55e", label:"HTML" }, css:{ color:"#22c55e", label:"CSS"  },
+  csv:  { color:"#15803d", label:"CSV"  }, tsv:{ color:"#15803d", label:"TSV"  },
+  sqlite:{ color:"#64748b", label:"SQLITE"}, db:{ color:"#64748b", label:"DB" },
+  wasm: { color:"#654ff0", label:"WASM" }, torrent:{ color:"#14b8a6", label:"TORRENT" },
+  psd:  { color:"#0ea5e9", label:"PSD"  }, blend:{ color:"#ea580c", label:"BLEND" },
+  ai:   { color:"#f97316", label:"AI"   },
+  apk:  { color:"#84cc16", label:"APK"  }, ipa:{ color:"#84cc16", label:"IPA"  },
+  epub: { color:"#78716c", label:"EPUB" }, mobi:{ color:"#78716c", label:"MOBI" },
+  azw3: { color:"#78716c", label:"AZW3" },
+  odt:  { color:"#2563eb", label:"ODT"  }, ods:{ color:"#16a34a", label:"ODS" },
+  odp:  { color:"#ea580c", label:"ODP"  },
+  srt:  { color:"#0d9488", label:"SRT"  }, vtt:{ color:"#0d9488", label:"VTT"  },
+  ass:  { color:"#0d9488", label:"ASS"  },
+  ttf:  { color:"#c026d3", label:"TTF"  }, otf:{ color:"#c026d3", label:"OTF" },
+  woff: { color:"#c026d3", label:"WOFF" }, woff2:{ color:"#c026d3", label:"WOFF2" },
+  eot:  { color:"#c026d3", label:"EOT"  },
+  doc:  { color:"#2979ff", label:"DOC"  }, docx:{ color:"#2979ff", label:"DOCX" },
+  ppt:  { color:"#d4a017", label:"PPT"  }, pptx:{ color:"#d4a017", label:"PPTX" },
+  xls:  { color:"#16a34a", label:"XLS"  }, xlsx:{ color:"#16a34a", label:"XLSX" },
+  pages:{ color:"#2979ff", label:"PAGES"}, numbers:{ color:"#16a34a", label:"NUMBERS" },
+  key:  { color:"#d4a017", label:"KEY"  },
+};
+
+function extMeta(name) {
+  const ext = getExt(name);
+  const base = EXT_META[ext] || { color: "#4a5070", label: (ext ? ext.toUpperCase().slice(0,7) : "FILE") };
+  return { ...base, iconSvg: ICON_SVGS[ext] || null };
+}
+
+const EXCLUDE = [
+  /^\./,
+  /^index\./i,
+  /^meta\.json$/i,
+  /\.html$/i
+];
+
+function isExcluded(name) {
+  return EXCLUDE.some(r => r.test(name));
+}
+
+async function loadFilesFromAutoindex() {
+  const meta = await loadMeta();
+  const r = await fetch("./files.json", { cache: "no-store" });
+  if (!r.ok) throw new Error(`files.json HTTP ${r.status}`);
+  const data = await r.json();
+
+  const items = (data || [])
+    .filter(x => x && x.type === "file" && x.name && !isExcluded(x.name))
+    .map(x => {
+      const name = x.name;
+      const pinned = meta[name] || {};
+      return {
+        name,
+        label: pinned.label || name,
+        desc: pinned.desc || `${extMeta(name).label} — ${bytesToHuman(x.size)}`,
+        size: bytesToHuman(x.size),
+        badge: pinned.badge || "free",
+        icon: pinned.icon || "📄",
+        date: parseNginxTime(x.mtime || x.time || ""),
+        path: `files/${encodeURIComponent(name)}`,
+        _bytes: Number(x.size || 0),
+        _mtime: String(x.mtime || x.time || "")
+      };
+    })
+    .sort((a, b) => (b._mtime.localeCompare(a._mtime) || a.name.localeCompare(b.name)));
+
+  const total = items.reduce((s, it) => s + (it._bytes || 0), 0);
+  document.querySelector("#stat-count span").textContent = items.length;
+  document.querySelector("#stat-total span").textContent = bytesToHuman(total);
+  return items;
+}
+
+const BADGE_LABEL = {
+  free: "FREE", bin: "BINARY", src: "SOURCE", doc: "DOCS", arc: "ARCHIVE"
+};
+
+const grid = document.getElementById("file-grid");
+
+let ALL = [];
+let ACTIVE_EXT = "all";
+
+function buildFilters(files) {
+  const exts = [...new Set(files.map(f => getExt(f.name)).filter(Boolean))].sort();
+  const bar = document.getElementById("filter-bar");
+  if (exts.length <= 1) { bar.style.display = "none"; return; }
+
+  bar.style.display = "flex";
+  bar.innerHTML = `<button class="filter-btn active" data-ext="all">ALL</button>`;
+  exts.forEach(ext => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn";
+    btn.dataset.ext = ext;
+    btn.textContent = ext.toUpperCase();
+    bar.appendChild(btn);
+  });
+
+  bar.onclick = (e) => {
+    const btn = e.target && e.target.closest && e.target.closest(".filter-btn");
+    if (!btn) return;
+    bar.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    ACTIVE_EXT = btn.dataset.ext || "all";
+    renderFiles(ALL);
+  };
+}
+
+function renderFiles(files) {
+  const filtered = (ACTIVE_EXT === "all") ? files : files.filter(f => getExt(f.name) === ACTIVE_EXT);
+  grid.innerHTML = "";
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div id="status-msg">
+        <div class="accent">// NO PACKAGES MATCH FILTER</div>
+      </div>`;
+    return;
+  }
+
+  filtered.forEach((f, i) => {
+    const meta = extMeta(f.name);
+    const iconHtml = meta.iconSvg
+      ? `<img src="${meta.iconSvg}" alt="">`
+      : String(f.icon || "📄");
+    const card = document.createElement("div");
+    card.className = "file-card";
+    card.style.animationDelay = `${.25 + i * .07}s`;
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.innerHTML = `
+      <div class="card-top">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="file-icon">${iconHtml}</div>
+          <div>
+            <div class="file-name">${f.label}</div>
+          </div>
+        </div>
+        <span class="file-type-tag" style="color:${meta.color};border-color:${meta.color}">${meta.label}</span>
+      </div>
+      <div class="file-desc">${f.desc}</div>
+      <div class="card-meta">
+        <span class="meta-size">${f.size}</span>
+        <span class="meta-dot">·</span>
+        <span>${f.date || ""}</span>
+        <a class="dl-btn" href="${f.path}" download="${f.name}" onclick="event.stopPropagation()"><span class="dl-arrow">↓</span> DOWNLOAD</a>
+      </div>`;
+    card.addEventListener("click", () => openDetails(f));
+    card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetails(f); } });
+    grid.appendChild(card);
+  });
+}
+
+const modal = document.getElementById("modal");
+const mClose = document.getElementById("m-close");
+const mTitle = document.getElementById("m-title");
+const mDesc = document.getElementById("m-desc");
+const mMeta = document.getElementById("m-meta");
+const mOpen = document.getElementById("m-open");
+const mDl = document.getElementById("m-dl");
+const mPreview = document.getElementById("m-preview");
+const mPreviewImg = document.getElementById("m-preview-img");
+
+function isPreviewableImage(name) {
+  const ext = getExt(name);
+  return ["png","jpg","jpeg","webp","gif","bmp","avif","svg"].includes(ext);
+}
+
+async function copyText(txt) {
+  try {
+    await navigator.clipboard.writeText(txt);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function openDetails(f) {
+  mTitle.textContent = f.label || f.name;
+  mDesc.textContent = f.desc || "";
+  mMeta.innerHTML = `
+    <span>NAME: <span style="color:#fff">${escapeHtml(f.name)}</span></span>
+    <span>SIZE: <span style="color:#fff">${escapeHtml(f.size)}</span></span>
+    <span>DATE: <span style="color:#fff">${escapeHtml(f.date || "")}</span></span>
+  `;
+  // Preview strategy:
+  // - Images: OPEN = PREVIEW (opens in new tab) + show inline preview
+  // - Non-images: OPEN = COPY LINK (avoid accidental download)
+  if (isPreviewableImage(f.name)) {
+    mOpen.textContent = "PREVIEW";
+    mOpen.href = f.path;
+    mOpen.target = "_blank";
+    mOpen.onclick = null;
+    if (mPreview && mPreviewImg) {
+      mPreview.style.display = "block";
+      mPreviewImg.src = f.path;
+      mPreviewImg.decoding = 'async';
+      mPreviewImg.alt = f.name;
+    }
+  } else {
+    mOpen.textContent = "COPY LINK";
+    mOpen.href = "#";
+    mOpen.target = "_self";
+    if (mPreview) mPreview.style.display = "none";
+    if (mPreviewImg) mPreviewImg.src = "";
+    mOpen.onclick = async (e) => {
+      e.preventDefault();
+      const ok = await copyText(location.origin + "/" + f.path);
+      if (ok) mOpen.textContent = "COPIED";
+      setTimeout(() => { mOpen.textContent = "COPY LINK"; }, 900);
+    };
+  }
+  mDl.href = f.path;
+  mDl.download = f.name;
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetails() {
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+mClose.addEventListener("click", closeDetails);
+modal.addEventListener("click", (e) => { if (e.target === modal) closeDetails(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal.classList.contains("open")) closeDetails(); });
+
+loadFilesFromAutoindex()
+  .then(files => {
+    ALL = files;
+    const st = document.getElementById("stat-status");
+    st.style.color = "var(--green)";
+    st.textContent = "ONLINE";
+    buildFilters(files);
+    renderFiles(files);
+  })
+  .catch(err => {
+    const st = document.getElementById("stat-status");
+    st.style.color = "var(--red)";
+    st.textContent = "ERROR";
+    grid.innerHTML = `
+      <div id="status-msg">
+        <div class="err">// SCAN FAILED</div>
+        <div style="margin-top:10px;font-size:11px;letter-spacing:.06em;line-height:1.8;color:var(--muted)">
+          ${String(err && err.message || err)}
+        </div>
+      </div>`;
+  });
+
+// clock
+function tick() {
+  const now = new Date();
+  document.getElementById("clock").textContent =
+    now.toISOString().replace("T", " ").slice(0, 19) + " UTC";
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

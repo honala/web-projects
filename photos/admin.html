@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photos Admin · honala.xyz</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#fafaf8; --surface:#fff; --border:#e8e4dc; --text:#1a1a18; --muted:#8a8680; --accent:#c9472f; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans SC', sans-serif; font-weight: 300; min-height: 100vh; }
+    header { padding: 48px 22px 30px; border-bottom: 1px solid var(--border); background: var(--surface); text-align: center; }
+    .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; display:block; }
+    h1 { font-family: 'Noto Serif SC', serif; font-weight: 600; font-size: clamp(22px,4.2vw,36px); margin-bottom: 10px; }
+    .sub { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 18px 80px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .row { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .input { border: 1px solid var(--border); border-radius: 999px; padding: 10px 12px; font-size: 13px; font-family: inherit; min-width: 240px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:34px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--text); font-size:12px; letter-spacing:.06em; cursor:pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+    .btn:hover { transform: translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,0.06); border-color:#d0ccc4; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color:#fff; }
+    .btn:disabled { opacity: .6; cursor: default; transform:none; box-shadow:none; }
+    .tiny { font-size: 12px; color: var(--muted); line-height: 1.7; margin-top: 10px; }
+    .status { margin-top: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); display:none; font-size: 12.5px; color: var(--muted); line-height:1.7; }
+    .status.show { display:block; }
+    .status.ok { border-color: rgba(46,166,90,0.35); }
+    .status.err { border-color: rgba(201,71,47,0.35); }
+    table { width:100%; border-collapse: collapse; margin-top: 14px; }
+    th, td { text-align:left; padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .pill { display:inline-flex; align-items:center; font-family:'JetBrains Mono', monospace; font-size:10px; padding:3px 9px; border-radius: 999px; background: rgba(201,71,47,0.10); color: var(--accent); }
+    .danger { color: var(--accent); }
+    a { color: inherit; }
+    .adv-only { display: none !important; }
+    body.adv-on .adv-only { display: inline-flex !important; }
+    .ops { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45);
+      z-index: 50; align-items: center; justify-content: center; padding: 18px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      max-width: 480px; width: 100%; padding: 18px; max-height: 90vh; overflow: auto;
+    }
+    .modal-panel h2 { font-family: 'Noto Serif SC', serif; font-size: 18px; margin-bottom: 12px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+    .field input, .field textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 13px; }
+    .field textarea { min-height: 100px; resize: vertical; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="label">Admin</span>
+    <h1>Photos 管理仪表盘</h1>
+    <p class="sub">需要口令才能执行删除/清理操作（不引入账号系统）。</p>
+    <p id="adv-hint" class="sub" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);">高级模式已开启：可编辑文案与重生成缩略图（再次快速三击标题关闭）。</p>
+  </header>
+
+  <main>
+    <div class="panel">
+      <div class="row">
+        <input id="token" class="input" type="password" placeholder="输入口令（不会显示在公开页面）">
+        <button id="eye" class="btn" type="button">👁</button>
+        <button id="btn-load" class="btn primary" type="button">加载列表</button>
+        <div class="spacer"></div>
+        <button id="btn-prune" class="btn" type="button">清理 meta（自动）</button>
+        <a class="btn" href="/" style="text-decoration:none;">返回画廊</a>
+      </div>
+
+      <div id="status" class="status"></div>
+      <div class="tiny">
+        - <b>隐藏 / 显示</b>只改 <code>meta.json</code> 标记，访客在画廊里看不到隐藏项；文件仍在服务器上。<br>
+        - 删除会同时移除：原图、缩略图，以及 <code>meta.json</code> 对应条目。<br>
+        - “清理 meta”会移除所有 <code>meta.json</code> 里但文件已不存在的条目。
+      </div>
+
+      <table id="tbl" style="display:none">
+        <thead>
+          <tr>
+            <th>预览</th>
+            <th>文件名</th>
+            <th>作者 / 标题</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="meta-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-labelledby="meta-modal-title">
+      <h2 id="meta-modal-title">编辑作品信息</h2>
+      <p class="tiny mono" id="meta-modal-file" style="margin-bottom:12px;"></p>
+      <div class="field">
+        <label for="meta-author">作者</label>
+        <input id="meta-author" type="text" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="meta-title">标题</label>
+        <input id="meta-title" type="text" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="meta-caption">短说明</label>
+        <input id="meta-caption" type="text" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="meta-story">长文案（可多行）</label>
+        <textarea id="meta-story" rows="4" autocomplete="off"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="meta-cancel" class="btn" type="button">取消</button>
+        <button id="meta-save" class="btn primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const elToken = document.getElementById('token');
+    const elEye = document.getElementById('eye');
+    const btnLoad = document.getElementById('btn-load');
+    const btnPrune = document.getElementById('btn-prune');
+    const status = document.getElementById('status');
+    const tbl = document.getElementById('tbl');
+    const tbody = document.getElementById('tbody');
+    const elAdvHint = document.getElementById('adv-hint');
+    const elH1 = document.querySelector('header h1');
+    const metaModal = document.getElementById('meta-modal');
+    const elMetaFile = document.getElementById('meta-modal-file');
+    const elMetaAuthor = document.getElementById('meta-author');
+    const elMetaTitle = document.getElementById('meta-title');
+    const elMetaCaption = document.getElementById('meta-caption');
+    const elMetaStory = document.getElementById('meta-story');
+    const btnMetaCancel = document.getElementById('meta-cancel');
+    const btnMetaSave = document.getElementById('meta-save');
+
+    let editingFile = '';
+    let h1Clicks = 0;
+    let h1Timer = null;
+
+    function setAdvMode(on) {
+      document.body.classList.toggle('adv-on', on);
+      elAdvHint.style.display = on ? 'block' : 'none';
+      try {
+        if (on) localStorage.setItem('honala.photos.admin.adv', '1');
+        else localStorage.removeItem('honala.photos.admin.adv');
+      } catch {}
+    }
+
+    function showStatus(kind, msg){
+      status.className = 'status show ' + (kind || '');
+      status.textContent = msg;
+    }
+
+    async function loadList(){
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      btnLoad.disabled = true;
+      showStatus('', '正在加载…');
+      try{
+        const fd = new FormData();
+        fd.append('token', token);
+        const r = await fetch('/papi/list', { method:'POST', body: fd });
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        const files = (j && Array.isArray(j.items) ? j.items : []);
+
+        tbody.innerHTML = '';
+        files.forEach((it) => {
+          const name = it && it.file ? it.file : '';
+          const isHidden = !!(it && it.hidden === true);
+          const author = it && it.author ? it.author : 'Photography';
+          const title = it && it.title ? it.title : (name.replace(/\.[^.]+$/, ''));
+          const caption = it && it.caption ? it.caption : '';
+          const story = it && it.story ? it.story : '';
+          const thumb = './files/thumbs/' + encodeURIComponent(name);
+          const full = './files/' + encodeURIComponent(name);
+
+          const tr = document.createElement('tr');
+          const td0 = document.createElement('td');
+          const a = document.createElement('a');
+          a.href = full; a.target = '_blank'; a.rel = 'noopener';
+          const img = document.createElement('img');
+          img.src = thumb; img.alt = '';
+          img.style.cssText = 'width:86px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e8e4dc';
+          img.onerror = function() { this.src = full; };
+          a.appendChild(img); td0.appendChild(a);
+
+          const td1 = document.createElement('td');
+          td1.className = 'mono'; td1.textContent = name;
+
+          const td2 = document.createElement('td');
+          const d1 = document.createElement('div'); d1.textContent = author;
+          const d2 = document.createElement('div'); d2.className = 'tiny'; d2.textContent = title;
+          if (isHidden) {
+            const ph = document.createElement('span');
+            ph.className = 'pill';
+            ph.style.marginLeft = '8px';
+            ph.textContent = '已隐藏';
+            d2.appendChild(ph);
+          }
+          td2.appendChild(d1); td2.appendChild(d2);
+
+          const td3 = document.createElement('td');
+          const ops = document.createElement('div');
+          ops.className = 'ops';
+
+          const btnVis = document.createElement('button');
+          btnVis.className = 'btn'; btnVis.type = 'button';
+          btnVis.textContent = isHidden ? '显示' : '隐藏';
+          btnVis.title = isHidden ? '在访客画廊中显示' : '从访客画廊中隐藏（不删文件）';
+          btnVis.addEventListener('click', () => doSetVisibility(name, !isHidden));
+
+          const btnDel = document.createElement('button');
+          btnDel.className = 'btn danger'; btnDel.type = 'button'; btnDel.textContent = '删除';
+          btnDel.addEventListener('click', () => doDelete(name));
+
+          const btnEdit = document.createElement('button');
+          btnEdit.className = 'btn adv-only'; btnEdit.type = 'button'; btnEdit.textContent = '编辑';
+          btnEdit.addEventListener('click', () => openMetaModal(name, { author, title, caption, story }));
+
+          const btnThumb = document.createElement('button');
+          btnThumb.className = 'btn adv-only'; btnThumb.type = 'button'; btnThumb.textContent = '重生成缩略图';
+          btnThumb.addEventListener('click', () => doThumbRefresh(name));
+
+          ops.appendChild(btnVis); ops.appendChild(btnDel); ops.appendChild(btnEdit); ops.appendChild(btnThumb);
+          td3.appendChild(ops);
+
+          tr.appendChild(td0); tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+          tbody.appendChild(tr);
+        });
+
+        tbl.style.display = '';
+        showStatus('ok', `已加载：${files.length} 个文件`);
+      }catch(e){
+        showStatus('err', '加载失败：' + (e && e.message ? e.message : String(e)));
+      }finally{
+        btnLoad.disabled = false;
+      }
+    }
+
+    async function doSetVisibility(name, hidden) {
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      const msg = hidden
+        ? ('确认隐藏（访客画廊将不显示）：' + name + ' ?')
+        : ('确认重新显示在画廊：' + name + ' ?');
+      if (!confirm(msg)) return;
+      showStatus('', hidden ? '正在隐藏…' : '正在恢复显示…');
+      const fd = new FormData();
+      fd.append('token', token);
+      fd.append('filename', name);
+      fd.append('hidden', hidden ? 'true' : 'false');
+      try {
+        const r = await fetch('/papi/set-visibility', { method: 'POST', body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        showStatus('ok', (hidden ? '已隐藏：' : '已显示：') + name);
+        await loadList();
+      } catch (e) {
+        showStatus('err', '操作失败：' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    async function doDelete(name){
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      if (!confirm('确定删除：' + name + ' ?（含缩略图 + meta）')) return;
+      showStatus('', '正在删除…');
+      const fd = new FormData();
+      fd.append('token', token);
+      fd.append('filename', name);
+      try{
+        const r = await fetch('/papi/delete', { method:'POST', body: fd });
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        showStatus('ok', '已删除：' + name);
+        await loadList();
+      }catch(e){
+        showStatus('err', '删除失败：' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    async function doPrune(){
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      showStatus('', '正在清理 meta…');
+      const fd = new FormData();
+      fd.append('token', token);
+      try{
+        const r = await fetch('/papi/prune', { method:'POST', body: fd });
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        showStatus('ok', `meta 已清理：移除 ${j.removed ?? 0} 条`);
+        await loadList();
+      }catch(e){
+        showStatus('err', '清理失败：' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    elEye.addEventListener('click', () => {
+      elToken.type = elToken.type === 'password' ? 'text' : 'password';
+    });
+    btnLoad.addEventListener('click', loadList);
+    btnPrune.addEventListener('click', doPrune);
+    function openMetaModal(name, meta) {
+      editingFile = name;
+      elMetaFile.textContent = name;
+      elMetaAuthor.value = meta.author || '';
+      elMetaTitle.value = meta.title || '';
+      elMetaCaption.value = meta.caption || '';
+      elMetaStory.value = meta.story || '';
+      metaModal.classList.add('show');
+      metaModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeMetaModal() {
+      editingFile = '';
+      metaModal.classList.remove('show');
+      metaModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function saveMetaFromModal() {
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      if (!editingFile) return;
+      showStatus('', '正在保存…');
+      const fd = new FormData();
+      fd.append('token', token);
+      fd.append('filename', editingFile);
+      fd.append('author', elMetaAuthor.value);
+      fd.append('title', elMetaTitle.value);
+      fd.append('caption', elMetaCaption.value);
+      fd.append('story', elMetaStory.value);
+      try {
+        const r = await fetch('/papi/meta-update', { method: 'POST', body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        showStatus('ok', '已更新：' + editingFile);
+        closeMetaModal();
+        await loadList();
+      } catch (e) {
+        showStatus('err', '保存失败：' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    async function doThumbRefresh(name) {
+      const token = (elToken.value || '').trim();
+      if (!token) { showStatus('err', '请先输入口令'); return; }
+      if (!confirm('从原图重新生成缩略图：' + name + ' ?')) return;
+      showStatus('', '正在生成缩略图…');
+      const fd = new FormData();
+      fd.append('token', token);
+      fd.append('filename', name);
+      try {
+        const r = await fetch('/papi/thumb-refresh', { method: 'POST', body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j && j.error ? j.error : ('HTTP ' + r.status));
+        showStatus('ok', '缩略图已更新：' + name);
+        await loadList();
+      } catch (e) {
+        showStatus('err', '缩略图失败：' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    elH1.addEventListener('click', () => {
+      h1Clicks++;
+      clearTimeout(h1Timer);
+      h1Timer = setTimeout(() => { h1Clicks = 0; }, 550);
+      if (h1Clicks >= 3) {
+        h1Clicks = 0;
+        const next = !document.body.classList.contains('adv-on');
+        setAdvMode(next);
+        showStatus('ok', next ? '高级模式已开启（再次三击标题关闭）' : '已关闭高级模式');
+      }
+    });
+
+    btnMetaCancel.addEventListener('click', closeMetaModal);
+    btnMetaSave.addEventListener('click', saveMetaFromModal);
+    metaModal.addEventListener('click', (e) => {
+      if (e.target === metaModal) closeMetaModal();
+    });
+
+    // convenience: remember token locally on this device
+    try{
+      const saved = localStorage.getItem('honala.photos.admin.token');
+      if (saved) elToken.value = saved;
+      elToken.addEventListener('change', () => {
+        const v = (elToken.value||'').trim();
+        if (v) localStorage.setItem('honala.photos.admin.token', v);
+      });
+      if (localStorage.getItem('honala.photos.admin.adv') === '1') {
+        setAdvMode(true);
+      }
+    }catch{}
+  </script>
+</body>
+</html>
+

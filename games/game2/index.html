@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回声未寄</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://game2.honala.xyz">
+<meta property="og:title" content="game2 · 回声未寄">
+<meta property="og:description" content="文字冒险 / 视觉小说">
+<meta property="og:image" content="https://game2.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="game2 · 回声未寄">
+<meta name="twitter:image" content="https://game2.honala.xyz/favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=ZCOOL+QingKe+HuangYou&display=swap');
+:root {
+  --panel-bg: rgba(8,12,20,0.88);
+  --panel-border: rgba(160,190,220,0.16);
+  --text-main: #e8e0d0;
+  --text-name: #a8c8e8;
+  --text-dim: #6a7a8a;
+  --accent: #6aabcc;
+  --accent2: #c8a882;
+  --serif: 'Noto Serif SC', serif;
+  --display: 'ZCOOL QingKe HuangYou', cursive;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--serif);background:#050810;width:100%;height:100vh;overflow:hidden;user-select:none;}
+
+/* ── BG ── */
+#bg-layer{position:absolute;inset:0;transition:opacity 0.8s;background:linear-gradient(175deg,#0a1628 0%,#1a2d4a 40%,#2a4060 70%,#1a3050 100%);}
+#bg-layer.beach-dusk{background:radial-gradient(ellipse at 50% 40%,#ff7030 0%,#e05020 25%,#801828 55%,#280810 85%,#100408 100%);}
+#bg-layer.attic{background:radial-gradient(ellipse at 60% 20%,#3a2808 0%,#1e1208 40%,#100c04 100%);}
+#bg-layer.night-tower{background:radial-gradient(ellipse at 50% 60%,#0c1828 0%,#060e18 50%,#020408 100%);}
+.bg-stars{position:absolute;inset:0;pointer-events:none;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.7}}
+.bg-grain{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");opacity:.5;pointer-events:none;}
+
+/* ── FADE OVERLAY ── */
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:80;transition:opacity 0.5s;}
+
+/* ── PARTICLES ── */
+#particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;background:rgba(160,210,245,0.5);animation:pfloat linear infinite;}
+@keyframes pfloat{0%{transform:translateY(100vh);opacity:0}10%{opacity:1}90%{opacity:.3}100%{transform:translateY(-5vh);opacity:0}}
+
+/* ── SPRITE ── */
+#sprite-layer{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:155px;pointer-events:none;}
+.sprite{position:absolute;bottom:0;transition:opacity .5s,transform .5s,filter .4s;display:flex;align-items:flex-end;justify-content:center;}
+.sprite.pos-center{transform:translateX(0);}
+.sprite.pos-left{transform:translateX(-200px);}
+.sprite.pos-right{transform:translateX(200px);}
+.sprite.dim{filter:brightness(0.45) saturate(0.5);}
+.sprite.hidden{opacity:0;pointer-events:none;}
+
+/* ── TITLE ── */
+#title-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#020408 0%,#0a1828 60%,#060e1c 100%);z-index:100;transition:opacity 1s;}
+#title-screen.out{opacity:0;pointer-events:none;}
+.title-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.t-main{font-family:var(--display);font-size:clamp(40px,7vw,68px);color:#e8e4d8;letter-spacing:.35em;text-shadow:0 0 80px rgba(106,171,204,.5),0 0 20px rgba(200,168,130,.2);animation:tpulse 5s ease-in-out infinite;margin-bottom:10px;}
+@keyframes tpulse{0%,100%{text-shadow:0 0 60px rgba(106,171,204,.35)}50%{text-shadow:0 0 120px rgba(106,171,204,.65),0 0 50px rgba(200,168,130,.25)}}
+.t-en{font-size:12px;color:rgba(160,190,210,.45);letter-spacing:.8em;margin-bottom:4px;font-weight:300;}
+.t-divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,rgba(106,171,204,.4),transparent);margin:20px auto 36px;}
+.t-btn{background:transparent;border:1px solid rgba(106,171,204,.3);color:rgba(168,200,224,.8);padding:11px 36px;font-family:var(--serif);font-size:14px;letter-spacing:.4em;cursor:pointer;border-radius:2px;transition:all .3s;margin:6px;display:block;width:180px;text-align:center;}
+.t-btn:hover{background:rgba(106,171,204,.1);border-color:rgba(106,171,204,.6);color:#d0e8f0;box-shadow:0 0 24px rgba(106,171,204,.18);}
+.t-wave{position:absolute;bottom:0;left:0;right:0;height:180px;overflow:hidden;}
+.t-wave svg{width:100%;height:100%;}
+
+/* ── CHAPTER TITLE ── */
+#ch-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;pointer-events:none;opacity:0;transition:opacity .8s;}
+#ch-overlay.vis{opacity:1;}
+.ch-num{font-size:11px;color:var(--accent);letter-spacing:.9em;margin-bottom:14px;font-weight:300;}
+.ch-line{width:60px;height:1px;background:rgba(106,171,204,.4);margin:0 auto 20px;}
+.ch-name{font-family:var(--display);font-size:clamp(28px,5vw,42px);color:var(--text-main);letter-spacing:.3em;text-shadow:0 0 50px rgba(106,171,204,.4);}
+
+/* ── DIALOGUE BOX ── */
+#dlg-box{position:absolute;bottom:0;left:0;right:0;padding:0 20px 20px;z-index:10;transition:opacity .3s;}
+#dlg-box.hidden{opacity:0;pointer-events:none;}
+.name-wrap{display:flex;align-items:flex-end;gap:0;margin-left:18px;}
+.name-tag{display:inline-block;background:var(--panel-bg);border:1px solid var(--panel-border);border-bottom:none;padding:5px 18px 7px;font-size:14px;color:var(--text-name);letter-spacing:.2em;border-radius:3px 3px 0 0;min-width:72px;backdrop-filter:blur(10px);transition:opacity .2s;}
+.name-tag.narrator{color:var(--text-dim);font-style:italic;font-size:12px;}
+.name-tag.empty{opacity:0;}
+.text-panel{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:0 3px 3px 3px;padding:18px 22px 14px;backdrop-filter:blur(14px);min-height:105px;cursor:pointer;position:relative;}
+#dlg-text{font-size:15.5px;line-height:2;color:var(--text-main);font-weight:300;min-height:52px;white-space:pre-wrap;}
+.next-arrow{position:absolute;bottom:13px;right:18px;width:9px;height:9px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(45deg);animation:abounce 1s ease-in-out infinite;opacity:0;transition:opacity .3s;}
+.next-arrow.vis{opacity:.65;}
+@keyframes abounce{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(2px,2px)}}
+
+/* ── CHOICES ── */
+#choices-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;pointer-events:none;opacity:0;transition:opacity .4s;background:rgba(4,8,16,.5);}
+#choices-layer.active{opacity:1;pointer-events:all;}
+.choices-wrap{display:flex;flex-direction:column;gap:10px;min-width:320px;max-width:480px;width:78%;}
+.ch-label{font-size:11px;color:var(--text-dim);letter-spacing:.5em;text-align:center;margin-bottom:6px;}
+.choice-btn{background:rgba(12,20,38,.88);border:1px solid rgba(106,171,204,.28);color:var(--text-main);padding:13px 22px;font-family:var(--serif);font-size:14px;letter-spacing:.06em;cursor:pointer;border-radius:2px;transition:all .22s;text-align:left;line-height:1.7;backdrop-filter:blur(8px);}
+.choice-btn:hover{background:rgba(106,171,204,.14);border-color:var(--accent);color:#cceeff;transform:translateX(8px);box-shadow:0 0 20px rgba(106,171,204,.12);}
+.choice-index{font-size:10px;color:var(--accent);margin-right:10px;opacity:.7;}
+
+/* ── HUD ── */
+#hud{position:absolute;top:14px;right:16px;display:flex;gap:8px;z-index:30;}
+.hud-btn{background:rgba(8,12,20,.65);border:1px solid rgba(160,190,220,.13);color:var(--text-dim);padding:5px 11px;font-size:10px;letter-spacing:.22em;cursor:pointer;border-radius:2px;font-family:var(--serif);transition:all .2s;backdrop-filter:blur(6px);}
+.hud-btn:hover{color:var(--text-main);border-color:var(--accent);}
+.hud-btn.on{color:var(--accent);border-color:rgba(106,171,204,.45);}
+#hud-left{position:absolute;top:14px;left:16px;display:flex;gap:8px;z-index:30;}
+
+/* ── BGM INDICATOR ── */
+#bgm-bar{position:absolute;bottom:175px;left:20px;display:flex;align-items:center;gap:8px;opacity:.5;z-index:11;transition:opacity .3s;pointer-events:none;}
+#bgm-bar.vis{opacity:.7;}
+.bgm-icon{font-size:11px;color:var(--accent);}
+.bgm-waves{display:flex;gap:2px;align-items:flex-end;}
+.bgm-w{width:2px;background:var(--accent);border-radius:1px;animation:bgmwave ease-in-out infinite;}
+@keyframes bgmwave{0%,100%{height:4px}50%{height:12px}}
+
+/* ── MODALS ── */
+.modal-overlay{position:absolute;inset:0;background:rgba(4,8,16,.85);z-index:90;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s;backdrop-filter:blur(4px);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:#080e1c;border:1px solid rgba(106,171,204,.2);border-radius:4px;padding:28px 32px;min-width:320px;max-width:500px;width:90%;}
+.modal-title{font-family:var(--display);font-size:20px;color:var(--text-main);letter-spacing:.25em;margin-bottom:20px;text-align:center;}
+.modal-close{float:right;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;margin-top:-4px;transition:color .2s;}
+.modal-close:hover{color:var(--text-main);}
+
+/* SAVE SLOTS */
+.save-slots{display:flex;flex-direction:column;gap:10px;}
+.save-slot{background:rgba(255,255,255,.03);border:1px solid rgba(160,190,220,.12);border-radius:3px;padding:14px 18px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center;}
+.save-slot:hover{background:rgba(106,171,204,.08);border-color:rgba(106,171,204,.3);}
+.save-slot.empty .slot-info{color:var(--text-dim);font-size:13px;font-style:italic;}
+.slot-num{font-size:11px;color:var(--accent);letter-spacing:.2em;margin-right:12px;}
+.slot-info{font-size:13px;color:var(--text-main);}
+.slot-meta{font-size:11px;color:var(--text-dim);}
+.slot-actions{display:flex;gap:8px;}
+.slot-act-btn{background:none;border:1px solid rgba(160,190,220,.2);color:var(--text-dim);padding:4px 10px;font-size:10px;cursor:pointer;border-radius:2px;transition:all .2s;font-family:var(--serif);}
+.slot-act-btn:hover{border-color:var(--accent);color:var(--text-main);}
+.slot-act-btn.danger:hover{border-color:#cc4444;color:#ff7070;}
+
+/* HISTORY */
+#history-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:6px;}
+#history-list::-webkit-scrollbar{width:3px;}
+#history-list::-webkit-scrollbar-thumb{background:rgba(106,171,204,.3);border-radius:2px;}
+.hist-item{padding:10px 14px;border-left:2px solid rgba(106,171,204,.2);background:rgba(255,255,255,.02);}
+.hist-who{font-size:11px;color:var(--accent);letter-spacing:.15em;margin-bottom:4px;}
+.hist-text{font-size:13px;color:rgba(232,224,208,.7);line-height:1.8;white-space:pre-wrap;}
+
+/* SETTINGS */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(160,190,220,.08);}
+.setting-label{font-size:13px;color:var(--text-main);letter-spacing:.1em;}
+.setting-val{font-size:12px;color:var(--accent);}
+input[type=range]{-webkit-appearance:none;width:140px;height:2px;background:rgba(106,171,204,.3);border-radius:1px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.toggle-sw{width:36px;height:18px;background:rgba(255,255,255,.1);border:1px solid rgba(106,171,204,.3);border-radius:9px;cursor:pointer;position:relative;transition:background .2s;}
+.toggle-sw.on{background:rgba(106,171,204,.35);}
+.toggle-sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-dim);transition:all .2s;}
+.toggle-sw.on::after{left:20px;background:var(--accent);}
+
+/* MENU */
+.menu-list{display:flex;flex-direction:column;gap:8px;}
+.menu-item{background:none;border:1px solid rgba(160,190,220,.15);color:var(--text-main);padding:12px 20px;font-family:var(--serif);font-size:14px;letter-spacing:.2em;cursor:pointer;border-radius:2px;transition:all .2s;text-align:left;}
+.menu-item:hover{background:rgba(106,171,204,.08);border-color:rgba(106,171,204,.35);}
+
+/* NOTIFY */
+#notify{position:absolute;bottom:185px;right:22px;background:rgba(8,18,34,.9);border:1px solid var(--accent);color:var(--accent);font-size:11px;padding:7px 14px;border-radius:2px;letter-spacing:.2em;z-index:95;opacity:0;transition:opacity .4s;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen">
+  <div class="title-particles" id="t-particles"></div>
+  <div class="t-en">A V I S U A L  N O V E L</div>
+  <div class="t-main">回声未寄</div>
+  <div style="font-size:12px;color:rgba(200,168,130,.5);letter-spacing:.5em;margin-bottom:4px;">ECHOES UNSENT</div>
+  <div class="t-divider"></div>
+  <button class="t-btn" onclick="startGame()">开始游戏</button>
+  <button class="t-btn" onclick="openSave('load')">读取存档</button>
+  <button class="t-btn" onclick="openSettings()">设　　置</button>
+  <div class="t-wave"><svg viewBox="0 0 1440 180" preserveAspectRatio="none">
+    <path d="M0,90 C360,140 720,40 1080,90 C1260,120 1380,80 1440,90 L1440,180 L0,180 Z" fill="rgba(8,14,28,.85)"/>
+    <path d="M0,120 C240,80 600,160 960,120 C1200,90 1380,140 1440,130 L1440,180 L0,180 Z" fill="rgba(4,8,18,.9)"/>
+  </svg></div>
+</div>
+
+<!-- GAME -->
+<div id="game" style="position:relative;width:100%;height:100vh;">
+  <div id="bg-layer"><div class="bg-stars" id="bg-stars"></div><div class="bg-grain"></div></div>
+  <div id="particles"></div>
+  <div id="fade"></div>
+
+  <div id="ch-overlay">
+    <div class="ch-num" id="ch-num">序章</div>
+    <div class="ch-line"></div>
+    <div class="ch-name" id="ch-name">夏天的末尾</div>
+  </div>
+
+  <div id="sprite-layer">
+    <div class="sprite hidden" id="sp-a"></div>
+    <div class="sprite hidden" id="sp-b"></div>
+  </div>
+
+  <div id="hud">
+    <button class="hud-btn" id="btn-auto" onclick="toggleAuto()">AUTO</button>
+    <button class="hud-btn" id="btn-skip" onclick="toggleSkip()">SKIP</button>
+    <button class="hud-btn" onclick="openHistory()">LOG</button>
+    <button class="hud-btn" onclick="openSave('save')">SAVE</button>
+    <button class="hud-btn" onclick="openMenu()">MENU</button>
+  </div>
+  <div id="hud-left">
+    <button class="hud-btn" onclick="toggleBgm()" id="btn-bgm">♪ BGM</button>
+  </div>
+
+  <div id="bgm-bar">
+    <span class="bgm-icon">♪</span>
+    <div class="bgm-waves">
+      <div class="bgm-w" style="animation-duration:.6s;animation-delay:0s"></div>
+      <div class="bgm-w" style="animation-duration:.8s;animation-delay:.1s"></div>
+      <div class="bgm-w" style="animation-duration:.5s;animation-delay:.2s"></div>
+      <div class="bgm-w" style="animation-duration:.9s;animation-delay:.05s"></div>
+      <div class="bgm-w" style="animation-duration:.7s;animation-delay:.15s"></div>
+    </div>
+    <span id="bgm-name" style="font-size:10px;color:var(--text-dim);letter-spacing:.2em;"></span>
+  </div>
+
+  <div id="dlg-box" class="hidden">
+    <div class="name-wrap">
+      <div class="name-tag empty" id="name-tag">—</div>
+    </div>
+    <div class="text-panel" onclick="handleClick()">
+      <div id="dlg-text"></div>
+      <div class="next-arrow" id="next-arrow"></div>
+    </div>
+  </div>
+
+  <div id="choices-layer">
+    <div class="choices-wrap">
+      <div class="ch-label">— 请做出选择 —</div>
+      <div id="choices-list"></div>
+    </div>
+  </div>
+
+  <div id="notify">已保存</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-save">
+  <div class="modal-box">
+    <div class="modal-title" id="save-modal-title">存档</div>
+    <button class="modal-close" onclick="closeModal('modal-save')">✕</button>
+    <div class="save-slots" id="save-slots"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-history">
+  <div class="modal-box">
+    <div class="modal-title">对话记录</div>
+    <button class="modal-close" onclick="closeModal('modal-history')">✕</button>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-title">设　置</div>
+    <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
+    <div class="setting-row">
+      <span class="setting-label">文字速度</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="10" max="80" value="38" id="speed-slider" oninput="setSpeed(this.value)">
+        <span class="setting-val" id="speed-val">38</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">BGM 音量</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="0" max="100" value="60" id="vol-slider" oninput="setVol(this.value)">
+        <span class="setting-val" id="vol-val">60</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">音效音量</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="0" max="100" value="70" id="sfx-slider" oninput="setSfxVol(this.value)">
+        <span class="setting-val" id="sfx-val">70</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">自动播放间隔</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" min="500" max="5000" step="500" value="2000" id="auto-slider" oninput="setAutoDelay(this.value)">
+        <span class="setting-val" id="auto-val">2.0s</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">文字阴影</span>
+      <div class="toggle-sw on" id="toggle-shadow" onclick="toggleShadow(this)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-menu">
+  <div class="modal-box" style="max-width:280px;">
+    <div class="modal-title">MENU</div>
+    <div class="menu-list">
+      <button class="menu-item" onclick="closeModal('modal-menu');openSave('save')">存档</button>
+      <button class="menu-item" onclick="closeModal('modal-menu');openSave('load')">读取</button>
+      <button class="menu-item" onclick="closeModal('modal-menu');openHistory()">回看记录</button>
+      <button class="menu-item" onclick="closeModal('modal-menu');openSettings()">设置</button>
+      <button class="menu-item" onclick="closeModal('modal-menu');backToTitle()">返回标题</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  SCRIPT DATA
+//  ↓↓↓ 在这里填写剧本 ↓↓↓
+// ══════════════════════════════
+const SCRIPT = {
+  scenes: {
+
+    // ── 序章 ──────────────────────────────────────────────────────────
+    // bg 可选值: beach-dusk | attic | night-tower | (后续扩展)
+    // bgm 可选值: ocean | still | recorder
+    // step type: narrate | say | choice | jump | end
+    // say 支持 sfx: blip | click | paper
+
+    "prologue": {
+      chapter: { num: "序章", name: "夏天的末尾" },
+      bg: "beach-dusk",
+      bgm: "ocean",
+      steps: [
+        { type: "narrate", text: "栖海市。\n八月最后一个下午。" },
+        { type: "narrate", text: "海风带着咸味，从东边一路贴着堤坝涌进来，把街边的招牌吹得嘎嘎作响。" },
+        { type: "narrate", text: "这座小城，我已经三年没有回来。" },
+        { type: "say", who: "许沉", text: "……还是老样子。", sfx: "blip" },
+        { type: "narrate", text: "公交车把我放在终点站，车门一关，引擎声远去，整条街道就这样静下来了。" },
+        { type: "narrate", text: "祖母走后，留下的只有一栋旧屋，和一张用钢笔写的便条：" },
+        { type: "say", who: "便条", text: "「沉，阁楼里有些东西是留给你的。\n记得找到它。\n　　　　——奶奶」" },
+        { type: "choice", options: [
+          { text: "先去旧屋看看", next: "attic" },
+          { text: "在街上再走一会儿", next: "town" }
+        ]}
+      ]
+    },
+
+    "town": {
+      bg: "beach-dusk",
+      bgm: "ocean",
+      steps: [
+        { type: "narrate", text: "我把行李寄放在车站，沿着主街往里走。" },
+        { type: "narrate", text: "烤鱼的烟，老唱片店，补了三次的斑马线——\n都在，只是比记忆里旧了一些。" },
+        { type: "say", who: "许沉", text: "（广播塔……我为什么想到它了？）" },
+        { type: "narrate", text: "那座生锈的铁塔就在镇边，隔着两条街就能看见塔顶的灯。\n不知道为什么，总觉得有什么东西落在那里。" },
+        { type: "narrate", text: "但天色快暗了。\n我转身，往旧屋走去。" },
+        { type: "jump", to: "attic" }
+      ]
+    },
+
+    "attic": {
+      bg: "attic",
+      bgm: "still",
+      steps: [
+        { type: "narrate", text: "旧屋还是原来的样子。\n木楼梯踩上去会叫，门锁要往左转两下才开。" },
+        { type: "say", who: "许沉", text: "（奶奶说阁楼里……）" },
+        { type: "narrate", text: "木箱、旧衣服、一摞发黄的杂志。\n灰尘在手电光里浮着，像时间的颗粒。" },
+        { type: "narrate", text: "然后我看见了它——" },
+        { type: "narrate", text: "角落里，一台老式录音机。\n旁边叠着几盒磁带，每一盒都贴着手写标签。" },
+        { type: "say", who: "标签", text: "「只要你还想说，就还能被听见。」", sfx: "paper" },
+        { type: "say", who: "许沉", text: "……什么意思？" },
+        { type: "choice", options: [
+          { text: "按下播放", next: "play" },
+          { text: "犹豫着，手悬在按键上", next: "hesitate" }
+        ]}
+      ]
+    },
+
+    "hesitate": {
+      bg: "attic",
+      bgm: "still",
+      steps: [
+        { type: "say", who: "许沉", text: "（等等——这是奶奶的东西。\n录的是谁的声音？）" },
+        { type: "narrate", text: "手指悬在停止键上方。\n静止了大概三秒。" },
+        { type: "narrate", text: "然后，声音自己出来了。" },
+        { type: "jump", to: "play" }
+      ]
+    },
+
+    "play": {
+      bg: "attic",
+      bgm: "recorder",
+      steps: [
+        { type: "narrate", text: "沙沙的磁带底噪，然后是一段安静。" },
+        { type: "narrate", text: "然后，是一个声音。\n年轻的，清而低，像是在空旷的地方说话。" },
+        { type: "say", who: "录音", text: "「……你还记得吗。\n那年夏天，我们在塔顶说好的事。」", sfx: "blip" },
+        { type: "say", who: "录音", text: "「你说你会记得的。\n但我想你已经忘了。」" },
+        { type: "say", who: "录音", text: "「所以我把这段话录在这里。\n等你找到它的那天，就是你该回来的时候了。」" },
+        { type: "narrate", text: "磁带到头了。\n嗒——\n录音机安静地停下来。", sfx: "click" },
+        { type: "say", who: "许沉", text: "（塔顶……是广播塔吗？）" },
+        { type: "say", who: "许沉", text: "（那个声音——我听过吗？）" },
+        { type: "narrate", text: "记忆像翻动的页码，什么都没有找到。" },
+        { type: "narrate", text: "窗外，广播塔的灯光在暮色里忽明忽暗。" },
+        { type: "narrate", text: "第一天就这样结束了。\n但我知道，某件事刚刚开始。" },
+        { type: "narrate", text: "—— 序章 完 ——" },
+        { type: "end" }
+      ]
+    }
+
+    // ── 在这里继续添加第一章、第二章…… ──────────────────────────────
+    // 格式示例:
+    // "ch1_start": {
+    //   chapter: { num: "第一章", name: "章节名" },
+    //   bg: "beach-dusk",
+    //   bgm: "ocean",
+    //   steps: [ ... ]
+    // }
+
+  }
+};
+
+// ══════════════════════════════
+//  STATE
+// ══════════════════════════════
+const S = {
+  scene: null, step: 0,
+  auto: false, skip: false,
+  autoTimer: null,
+  typing: false, typeDone: false,
+  waiting: false,
+  history: [],
+  settings: { speed: 38, vol: 60, sfxVol: 70, autoDelay: 2000, shadow: true },
+  bgmOn: true,
+  currentBgm: null
+};
+let typingInt = null, currentFullText = "";
+
+// ══════════════════════════════
+//  AUDIO ENGINE
+// ══════════════════════════════
+let ctx = null, gainNode = null, sfxGain = null, bgmSource = null, bgmBuf = {};
+
+function initAudio() {
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = ctx.createGain(); gainNode.gain.value = S.settings.vol / 100;
+  sfxGain = ctx.createGain(); sfxGain.gain.value = S.settings.sfxVol / 100;
+  gainNode.connect(ctx.destination);
+  sfxGain.connect(ctx.destination);
+  buildBgm();
+}
+
+function buildBgm() {
+  bgmBuf.ocean = makeOcean();
+  bgmBuf.still = makeStill();
+  bgmBuf.recorder = makeRecorder();
+}
+
+function makeOcean() {
+  const dur = 8;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  let v = 0;
+  for (let i = 0; i < d.length; i++) {
+    v = v * .998 + (Math.random() * 2 - 1) * .002;
+    const wave = Math.sin(i / ctx.sampleRate * 0.3) * 0.5 + 0.5;
+    d[i] = v * wave * 0.4 + (Math.random() * 2 - 1) * .01;
+  }
+  return buf;
+}
+
+function makeStill() {
+  const dur = 6;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  let v = 0;
+  for (let i = 0; i < d.length; i++) {
+    v = v * .9995 + (Math.random() * 2 - 1) * .0005;
+    d[i] = v * 0.12;
+  }
+  return buf;
+}
+
+function makeRecorder() {
+  const dur = 4, r = ctx.sampleRate;
+  const buf = ctx.createBuffer(1, r * dur, r);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const crackle = Math.random() < .0005 ? Math.random() * .3 : 0;
+    const hum = Math.sin(i / r * 2 * Math.PI * 50) * .04;
+    d[i] = hum + (Math.random() * 2 - 1) * .03 + crackle;
+  }
+  return buf;
+}
+
+function playBgm(name) {
+  if (!ctx || !S.bgmOn) return;
+  if (bgmSource) { try { bgmSource.stop(); } catch (e) {} }
+  const buf = bgmBuf[name];
+  if (!buf) return;
+  bgmSource = ctx.createBufferSource();
+  bgmSource.buffer = buf;
+  bgmSource.loop = true;
+  bgmSource.connect(gainNode);
+  bgmSource.start();
+  S.currentBgm = name;
+  const names = { ocean: "海风 / 海浪声", still: "静夜 / 旧屋", recorder: "磁带底噪" };
+  document.getElementById('bgm-name').textContent = names[name] || name;
+  document.getElementById('bgm-bar').classList.add('vis');
+}
+
+function stopBgm() {
+  if (bgmSource) { try { bgmSource.stop(); } catch (e) {} bgmSource = null; }
+  document.getElementById('bgm-bar').classList.remove('vis');
+}
+
+function toggleBgm() {
+  if (!ctx) initAudio();
+  S.bgmOn = !S.bgmOn;
+  const btn = document.getElementById('btn-bgm');
+  if (S.bgmOn) { btn.classList.add('on'); if (S.currentBgm) playBgm(S.currentBgm); }
+  else { btn.classList.remove('on'); stopBgm(); }
+}
+
+function playSfx(name) {
+  if (!ctx) return;
+  const r = ctx.sampleRate;
+  if (name === 'blip') {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(.18, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .08);
+    o.connect(g); g.connect(sfxGain);
+    o.start(); o.stop(ctx.currentTime + .08);
+  } else if (name === 'click') {
+    const buf = ctx.createBuffer(1, r * .06, r);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (r * .01));
+    const s = ctx.createBufferSource(); s.buffer = buf;
+    s.connect(sfxGain); s.start();
+  } else if (name === 'paper') {
+    const buf = ctx.createBuffer(1, r * .15, r);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (r * .04)) * .3;
+    const s = ctx.createBufferSource(); s.buffer = buf;
+    s.connect(sfxGain); s.start();
+  }
+}
+
+// ══════════════════════════════
+//  SPRITE SYSTEM
+// ══════════════════════════════
+const CHARS = {
+  "许沉":   { color: "#2a3a5a", accent: "#4a7aaa" },
+  "林雾":   { color: "#1a2a3a", accent: "#4a8aaa" },
+  "夏知遥": { color: "#3a2a4a", accent: "#9a6aaa" },
+  "顾栖":   { color: "#2a3a2a", accent: "#6a9a6a" },
+  "沈晚音": { color: "#2a2a3a", accent: "#8a7aaa" },
+};
+
+function makeSilhouette(charName) {
+  const c = CHARS[charName] || { color: "#2a2a3a", accent: "#6a8aaa" };
+  const id = charName.replace(/\s/g,'');
+  return `<svg width="200" height="380" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="sg${id}" cx="50%" cy="30%" r="70%">
+        <stop offset="0%" stop-color="${c.accent}" stop-opacity=".5"/>
+        <stop offset="100%" stop-color="${c.color}" stop-opacity=".9"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="100" cy="60" rx="38" ry="44" fill="url(#sg${id})"/>
+    <path d="M30,380 Q40,200 100,180 Q160,200 170,380 Z" fill="url(#sg${id})"/>
+    <ellipse cx="100" cy="60" rx="30" ry="34" fill="${c.accent}" opacity=".12"/>
+    <text x="100" y="335" text-anchor="middle" fill="rgba(255,255,255,.2)" font-size="11"
+      font-family="Noto Serif SC" letter-spacing="4">${charName}</text>
+    <text x="100" y="355" text-anchor="middle" fill="rgba(255,255,255,.12)" font-size="10"
+      font-family="sans-serif" letter-spacing="2">立绘占位</text>
+  </svg>`;
+}
+
+// 换真实立绘只需替换此函数，返回 <img src="path/to/sprite.png" style="height:380px">
+function showSprite(slot, charName, pos, dim) {
+  const el = document.getElementById(`sp-${slot}`);
+  el.innerHTML = makeSilhouette(charName);
+  el.className = `sprite pos-${pos || 'center'}${dim ? ' dim' : ''}`;
+  el.style.opacity = 1;
+}
+function hideSprite(slot) {
+  document.getElementById(`sp-${slot}`).className = 'sprite hidden';
+}
+
+// ══════════════════════════════
+//  SCENE ENGINE
+// ══════════════════════════════
+function fadeIn(cb) {
+  const f = document.getElementById('fade');
+  f.style.opacity = 1; f.style.transition = 'none';
+  setTimeout(() => { f.style.transition = 'opacity .5s'; f.style.opacity = 0; setTimeout(cb, 500); }, 50);
+}
+
+function loadScene(id) {
+  fadeIn(() => {
+    const sc = SCRIPT.scenes[id];
+    if (!sc) return;
+    S.scene = id; S.step = 0;
+    if (sc.bg) setBg(sc.bg);
+    if (sc.bgm && S.bgmOn) playBgm(sc.bgm);
+    else if (sc.bgm) S.currentBgm = sc.bgm;
+    if (sc.chapter) showChapter(sc.chapter, () => runStep());
+    else runStep();
+  });
+}
+
+function setBg(cls) {
+  const bg = document.getElementById('bg-layer');
+  bg.className = cls;
+  const grain = document.createElement('div'); grain.className = 'bg-grain';
+  const stars = document.createElement('div'); stars.className = 'bg-stars'; stars.id = 'bg-stars';
+  bg.appendChild(stars); bg.appendChild(grain);
+  if (cls === 'night-tower') buildStars();
+}
+
+function buildStars() {
+  const c = document.getElementById('bg-stars'); if (!c) return;
+  c.innerHTML = '';
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random() * 2 + .5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*70}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    c.appendChild(s);
+  }
+}
+
+function showChapter(ch, cb) {
+  const el = document.getElementById('ch-overlay');
+  document.getElementById('ch-num').textContent = ch.num;
+  document.getElementById('ch-name').textContent = ch.name;
+  document.getElementById('dlg-box').classList.add('hidden');
+  el.classList.add('vis');
+  setTimeout(() => { el.classList.remove('vis'); setTimeout(cb, 800); }, 2400);
+}
+
+function runStep() {
+  const sc = SCRIPT.scenes[S.scene];
+  if (!sc || S.step >= sc.steps.length) return;
+  const step = sc.steps[S.step];
+  S.waiting = false;
+  document.getElementById('choices-layer').classList.remove('active');
+
+  switch (step.type) {
+    case 'narrate': showDlg(null, step.text, step.sfx); break;
+    case 'say':     showDlg(step.who, step.text, step.sfx); break;
+    case 'choice':  showChoices(step.options); break;
+    case 'jump':    loadScene(step.to); break;
+    case 'end':     onEnd(); break;
+    default:        advance();
+  }
+}
+
+function showDlg(who, text, sfx) {
+  const box = document.getElementById('dlg-box');
+  const tag = document.getElementById('name-tag');
+  const arrow = document.getElementById('next-arrow');
+  box.classList.remove('hidden');
+  arrow.classList.remove('vis');
+  if (!who) { tag.textContent = '——'; tag.className = 'name-tag narrator'; }
+  else { tag.textContent = who; tag.className = 'name-tag'; }
+
+  S.history.push({ who: who || '旁白', text });
+  if (sfx) playSfx(sfx);
+
+  typeText(text, () => {
+    arrow.classList.add('vis');
+    S.waiting = true;
+    if (S.auto) S.autoTimer = setTimeout(advance, S.settings.autoDelay);
+    if (S.skip) setTimeout(advance, 80);
+  });
+}
+
+function typeText(text, cb) {
+  clearInterval(typingInt);
+  S.typing = true; S.typeDone = false;
+  currentFullText = text;
+  const el = document.getElementById('dlg-text');
+  el.textContent = ''; let i = 0;
+  const speed = S.skip ? 8 : S.settings.speed;
+  typingInt = setInterval(() => {
+    if (i < text.length) { el.textContent = text.slice(0, ++i); }
+    else { clearInterval(typingInt); S.typing = false; S.typeDone = true; if (cb) cb(); }
+  }, speed);
+}
+
+function handleClick() {
+  if (!ctx) initAudio();
+  if (S.typing && !S.typeDone) {
+    clearInterval(typingInt); S.typing = false; S.typeDone = true;
+    document.getElementById('dlg-text').textContent = currentFullText;
+    document.getElementById('next-arrow').classList.add('vis');
+    S.waiting = true;
+    if (S.auto) S.autoTimer = setTimeout(advance, S.settings.autoDelay);
+    return;
+  }
+  if (S.waiting) advance();
+}
+
+function advance() {
+  clearTimeout(S.autoTimer); S.waiting = false; S.step++; runStep();
+}
+
+function showChoices(opts) {
+  S.waiting = true;
+  document.getElementById('dlg-box').classList.add('hidden');
+  const layer = document.getElementById('choices-layer');
+  const list = document.getElementById('choices-list');
+  list.innerHTML = '';
+  opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-index">${i + 1}</span>${o.text}`;
+    btn.onclick = () => { layer.classList.remove('active'); loadScene(o.next); };
+    list.appendChild(btn);
+  });
+  layer.classList.add('active');
+}
+
+function onEnd() {
+  document.getElementById('dlg-box').classList.add('hidden');
+}
+
+// ══════════════════════════════
+//  CONTROLS
+// ══════════════════════════════
+function toggleAuto() {
+  if (!ctx) initAudio();
+  S.auto = !S.auto; S.skip = false;
+  document.getElementById('btn-auto').classList.toggle('on', S.auto);
+  document.getElementById('btn-skip').classList.remove('on');
+  if (S.auto && S.waiting) S.autoTimer = setTimeout(advance, S.settings.autoDelay);
+}
+function toggleSkip() {
+  if (!ctx) initAudio();
+  S.skip = !S.skip; S.auto = false;
+  document.getElementById('btn-skip').classList.toggle('on', S.skip);
+  document.getElementById('btn-auto').classList.remove('on');
+  if (S.skip && S.waiting) advance();
+}
+
+// ══════════════════════════════
+//  SAVE SYSTEM
+// ══════════════════════════════
+let saveMode = 'save';
+function openSave(mode) {
+  saveMode = mode;
+  document.getElementById('save-modal-title').textContent = mode === 'save' ? '存档' : '读档';
+  renderSlots();
+  openModal('modal-save');
+}
+function renderSlots() {
+  const cont = document.getElementById('save-slots'); cont.innerHTML = '';
+  for (let i = 1; i <= 3; i++) {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(`echoes_s${i}`)); } catch (e) {}
+    const slot = document.createElement('div');
+    slot.className = `save-slot ${data ? '' : 'empty'}`;
+    if (data) {
+      slot.innerHTML = `
+        <div style="display:flex;align-items:center;">
+          <span class="slot-num">SLOT ${i}</span>
+          <div><div class="slot-info">${data.label || '未知位置'}</div><div class="slot-meta">${data.time || ''}</div></div>
+        </div>
+        <div class="slot-actions">
+          ${saveMode === 'save'
+            ? `<button class="slot-act-btn" onclick="doSave(${i})">覆盖</button>`
+            : `<button class="slot-act-btn" onclick="doLoad(${i})">读取</button>`}
+          <button class="slot-act-btn danger" onclick="doDelete(${i})">删除</button>
+        </div>`;
+    } else {
+      slot.innerHTML = `
+        <div style="display:flex;align-items:center;">
+          <span class="slot-num">SLOT ${i}</span>
+          <span class="slot-info">${saveMode === 'save' ? '空存档槽 — 点击保存' : '暂无存档'}</span>
+        </div>`;
+      if (saveMode === 'save') slot.onclick = () => doSave(i);
+    }
+    cont.appendChild(slot);
+  }
+}
+function doSave(n) {
+  const sc = SCRIPT.scenes[S.scene];
+  const label = sc?.chapter ? `${sc.chapter.num} · ${sc.chapter.name}` : (S.scene || '游戏中');
+  const data = {
+    scene: S.scene, step: S.step, label,
+    time: new Date().toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  };
+  localStorage.setItem(`echoes_s${n}`, JSON.stringify(data));
+  closeModal('modal-save'); notify('存档成功');
+}
+function doLoad(n) {
+  let d = null; try { d = JSON.parse(localStorage.getItem(`echoes_s${n}`)); } catch (e) {}
+  if (!d) return;
+  closeModal('modal-save');
+  document.getElementById('title-screen').classList.add('out');
+  S.scene = d.scene; S.step = d.step;
+  const sc = SCRIPT.scenes[d.scene];
+  if (sc) {
+    fadeIn(() => { if (sc.bg) setBg(sc.bg); if (sc.bgm && S.bgmOn) playBgm(sc.bgm); runStep(); });
+  }
+}
+function doDelete(n) { localStorage.removeItem(`echoes_s${n}`); renderSlots(); }
+
+// ══════════════════════════════
+//  HISTORY
+// ══════════════════════════════
+function openHistory() {
+  const list = document.getElementById('history-list'); list.innerHTML = '';
+  if (!S.history.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px;">暂无记录</div>';
+  } else {
+    [...S.history].reverse().forEach(h => {
+      const item = document.createElement('div'); item.className = 'hist-item';
+      item.innerHTML = `<div class="hist-who">${h.who}</div><div class="hist-text">${h.text}</div>`;
+      list.appendChild(item);
+    });
+  }
+  openModal('modal-history');
+}
+
+// ══════════════════════════════
+//  SETTINGS
+// ══════════════════════════════
+function openSettings() { openModal('modal-settings'); }
+function setSpeed(v) { S.settings.speed = +v; document.getElementById('speed-val').textContent = v; }
+function setVol(v) { S.settings.vol = +v; document.getElementById('vol-val').textContent = v; if (gainNode) gainNode.gain.value = v / 100; }
+function setSfxVol(v) { S.settings.sfxVol = +v; document.getElementById('sfx-val').textContent = v; if (sfxGain) sfxGain.gain.value = v / 100; }
+function setAutoDelay(v) { S.settings.autoDelay = +v; document.getElementById('auto-val').textContent = (v / 1000).toFixed(1) + 's'; }
+function toggleShadow(el) {
+  S.settings.shadow = !S.settings.shadow; el.classList.toggle('on', S.settings.shadow);
+  document.getElementById('dlg-text').style.textShadow = S.settings.shadow ? '0 1px 3px rgba(0,0,0,.5)' : '';
+}
+
+// ══════════════════════════════
+//  MODALS / MENU
+// ══════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openMenu() { openModal('modal-menu'); }
+function backToTitle() {
+  closeModal('modal-menu');
+  const ts = document.getElementById('title-screen');
+  ts.style.opacity = 1; ts.classList.remove('out');
+  stopBgm();
+}
+function notify(msg) {
+  const el = document.getElementById('notify');
+  el.textContent = msg; el.style.opacity = 1;
+  setTimeout(() => el.style.opacity = 0, 1600);
+}
+
+// ══════════════════════════════
+//  BOOT
+// ══════════════════════════════
+function startGame() {
+  if (!ctx) initAudio();
+  document.getElementById('title-screen').classList.add('out');
+  loadScene('prologue');
+}
+
+// Title + game particles
+(function () {
+  [['t-particles', 25, 20], ['particles', 15, 18]].forEach(([id, count, maxDelay]) => {
+    const c = document.getElementById(id); if (!c) return;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div'); p.className = 'particle';
+      const sz = Math.random() * 2.5 + .5;
+      p.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;animation-duration:${10+Math.random()*15}s;animation-delay:${Math.random()*maxDelay}s;opacity:${.15+Math.random()*.4};`;
+      c.appendChild(p);
+    }
+  });
+})();
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowRight') {
+      if (!ctx) initAudio(); handleClick();
+    }
+    if (e.code === 'KeyA') toggleAuto();
+    if (e.ctrlKey && e.code === 'KeyS') { e.preventDefault(); openSave('save'); }
+    if (e.code === 'Escape') {
+      const open = ['modal-menu','modal-save','modal-history','modal-settings'].find(m => document.getElementById(m).classList.contains('open'));
+      if (open) closeModal(open); else openMenu();
+    }
+  }
+});
+</script>
+</body>
+</html>

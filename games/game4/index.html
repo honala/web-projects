@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>龙与地下城 · 卡牌对决</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://game4.honala.xyz/">
+<meta property="og:title" content="game4 · DnD 卡牌对决">
+<meta property="og:description" content="选择种族与职业，用卡牌在地下城回合制对决">
+<meta property="og:image" content="https://game4.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="game4 · DnD 卡牌对决">
+<meta name="twitter:image" content="https://game4.honala.xyz/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0a07;
+  --surface: #1a1410;
+  --surface2: #241c14;
+  --gold: #c9a227;
+  --gold-light: #e8c84a;
+  --red: #c0392b;
+  --blue: #2980b9;
+  --green: #27ae60;
+  --purple: #8e44ad;
+  --gray: #7f8c8d;
+  --text: #e8d5a3;
+  --text-muted: #8a7355;
+  --border: #3d2e1a;
+  --card-w: 118px;
+  --card-h: 172px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Crimson Text', Georgia, serif; min-height: 100vh; overflow-x: hidden; }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ══════════════════════════════════════
+   CHARACTER CREATION
+══════════════════════════════════════ */
+#creation-screen {
+  min-height: 100vh;
+  padding: 2rem 1.5rem 3rem;
+  align-items: center;
+  background: radial-gradient(ellipse at 50% 0%, #2d1a00 0%, transparent 65%), var(--bg);
+}
+.creation-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.08em;
+}
+.creation-sub {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 1.05rem;
+  margin-bottom: 2.5rem;
+}
+.sep {
+  width: 100%;
+  max-width: 680px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin-bottom: 2rem;
+}
+.selection-group { width: 100%; max-width: 680px; margin-bottom: 2rem; }
+.selection-label {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 0.9rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.option-grid { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.option-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  min-width: 108px;
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.option-card:hover { border-color: rgba(201,162,39,0.5); background: var(--surface2); }
+.option-card.selected {
+  border-color: var(--gold);
+  background: var(--surface2);
+  box-shadow: 0 0 18px rgba(201,162,39,0.18);
+}
+.option-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 5px; right: 7px;
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+.option-emoji { font-size: 2rem; display: block; margin-bottom: 0.35rem; }
+.option-name { font-family: 'Cinzel', serif; font-size: 0.78rem; color: var(--gold-light); margin-bottom: 0.25rem; }
+.option-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; }
+.option-stats { display: flex; justify-content: center; gap: 4px; margin-top: 0.35rem; flex-wrap: wrap; }
+.stat-badge {
+  font-size: 0.62rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(201,162,39,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(201,162,39,0.28);
+}
+.option-bonus { font-size: 0.63rem; color: #6a8a6a; margin-top: 4px; line-height: 1.2; }
+
+#begin-btn {
+  font-family: 'Cinzel', serif;
+  background: linear-gradient(135deg, #c9a227, #7a5e0a);
+  color: #0d0a07;
+  border: none;
+  padding: 0.9rem 3rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 0.5rem;
+}
+#begin-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+#begin-btn:active:not(:disabled) { transform: scale(0.98); }
+#begin-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ══════════════════════════════════════
+   BATTLE SCREEN
+══════════════════════════════════════ */
+#battle-screen {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 25%, #1a0a00 0%, transparent 55%), var(--bg);
+}
+
+/* Enemy Zone */
+.enemy-zone {
+  padding: 0.85rem 1.2rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+.enemy-sprite { font-size: 3.2rem; min-width: 58px; text-align: center; line-height: 1; }
+.enemy-info { flex: 1; min-width: 0; }
+.enemy-name { font-family: 'Cinzel', serif; font-size: 1.05rem; color: #e74c3c; margin-bottom: 0.25rem; }
+.enemy-intent { font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.35rem; }
+.bar-row { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 3px; }
+.bar-label { font-size: 0.68rem; color: var(--text-muted); min-width: 22px; }
+.bar-track { flex: 1; height: 7px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.35s ease; }
+.bar-fill.hp  { background: linear-gradient(90deg, #7a0000, #c0392b); }
+.bar-fill.mp  { background: linear-gradient(90deg, #122a56, #2980b9); }
+.bar-fill.ehp { background: linear-gradient(90deg, #3a0000, #a93226); }
+.bar-val { font-size: 0.68rem; color: var(--text-muted); min-width: 48px; text-align: right; }
+.shield-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(41,128,185,0.18); border: 1px solid rgba(41,128,185,0.5);
+  color: #5dade2; font-size: 0.72rem; padding: 1px 7px; border-radius: 3px; margin-top: 2px;
+}
+
+/* Battle Log */
+.battle-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.6rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 145px;
+  min-height: 80px;
+}
+.log-entry { font-size: 0.83rem; color: var(--text-muted); padding: 1px 0; animation: fadeUp 0.25s ease; }
+.log-entry.player { color: #e8c84a; }
+.log-entry.enemy  { color: #e74c3c; }
+.log-entry.heal   { color: #2ecc71; }
+.log-entry.system { color: #5d6d7e; font-style: italic; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* Player Zone */
+.player-zone {
+  padding: 0.55rem 1.2rem 0.65rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0,0,0,0.15);
+}
+.player-sprite { font-size: 2.4rem; min-width: 48px; text-align: center; }
+.player-info { flex: 1; min-width: 0; }
+.player-name { font-family: 'Cinzel', serif; font-size: 0.88rem; color: var(--gold); margin-bottom: 0.25rem; }
+.mini-stats { display: flex; gap: 0.8rem; margin-top: 3px; flex-wrap: wrap; }
+.mini-stat { font-size: 0.72rem; color: var(--text-muted); }
+.mini-stat span { color: var(--text); }
+.statuses { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.status-tag { font-size: 0.62rem; padding: 1px 5px; border-radius: 3px; border: 1px solid; }
+.status-tag.buff   { background: rgba(39,174,96,0.14); border-color: #27ae60; color: #2ecc71; }
+.status-tag.debuff { background: rgba(192,57,43,0.14); border-color: #c0392b; color: #e74c3c; }
+.status-tag.poison { background: rgba(142,68,173,0.14); border-color: #8e44ad; color: #9b59b6; }
+
+/* Turn controls */
+.turn-ctrl { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.round-lbl { font-size: 0.68rem; color: var(--text-muted); text-align: center; }
+.end-btn {
+  font-family: 'Cinzel', serif;
+  background: rgba(201,162,39,0.08);
+  color: var(--gold);
+  border: 1px solid rgba(201,162,39,0.5);
+  padding: 0.55rem 1.1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.end-btn:hover:not(:disabled) { background: rgba(201,162,39,0.18); }
+.end-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.deck-lbl { font-size: 0.65rem; color: var(--text-muted); text-align: center; }
+
+/* ── HAND ── */
+.hand-zone {
+  padding: 0.5rem 0.8rem 0.9rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.28);
+  flex-shrink: 0;
+}
+.hand-zone::-webkit-scrollbar { height: 3px; }
+.hand-zone::-webkit-scrollbar-track { background: transparent; }
+.hand-zone::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── CARD ── */
+.card {
+  width: var(--card-w);
+  min-width: var(--card-w);
+  height: var(--card-h);
+  background: var(--surface);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+.card:hover:not(.disabled) { transform: translateY(-14px) scale(1.04); z-index: 10; }
+.card.disabled { opacity: 0.46; cursor: not-allowed; }
+
+.card.t-attack  { border-color: #6b1a1a; }
+.card.t-attack:hover:not(.disabled)  { box-shadow: 0 10px 24px rgba(192,57,43,0.42);  border-color: var(--red); }
+.card.t-magic   { border-color: #183660; }
+.card.t-magic:hover:not(.disabled)   { box-shadow: 0 10px 24px rgba(41,128,185,0.42);  border-color: var(--blue); }
+.card.t-defense { border-color: #2d3436; }
+.card.t-defense:hover:not(.disabled) { box-shadow: 0 10px 24px rgba(127,140,141,0.3); border-color: var(--gray); }
+.card.t-utility { border-color: #1a4020; }
+.card.t-utility:hover:not(.disabled) { box-shadow: 0 10px 24px rgba(39,174,96,0.32);  border-color: var(--green); }
+.card.t-special { border-color: #37145a; }
+.card.t-special:hover:not(.disabled) { box-shadow: 0 10px 24px rgba(142,68,173,0.42); border-color: var(--purple); }
+
+.card-hd { display: flex; justify-content: space-between; align-items: center; padding: 5px 6px 2px; }
+.card-nm { font-family: 'Cinzel', serif; font-size: 0.58rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 78px; }
+.card-cost { font-family: 'Cinzel', serif; font-size: 0.72rem; color: #5dade2; font-weight: 700; min-width: 16px; text-align: center; }
+.card-cost.free { color: #444; font-size: 0.65rem; }
+.card-art {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.6rem;
+  background: rgba(0,0,0,0.22);
+  margin: 0 5px;
+  border-radius: 4px;
+}
+.card-stripe { height: 3px; margin: 3px 6px 2px; border-radius: 2px; }
+.t-attack  .card-stripe { background: var(--red); }
+.t-magic   .card-stripe { background: var(--blue); }
+.t-defense .card-stripe { background: var(--gray); }
+.t-utility .card-stripe { background: var(--green); }
+.t-special .card-stripe { background: var(--purple); }
+.card-desc { font-size: 0.56rem; color: var(--text-muted); padding: 0 6px 2px; line-height: 1.25; text-align: center; }
+.card-val { font-family: 'Cinzel', serif; font-size: 0.88rem; text-align: center; padding-bottom: 5px; font-weight: 700; }
+.t-attack  .card-val { color: #e74c3c; }
+.t-magic   .card-val { color: #5dade2; }
+.t-defense .card-val { color: #95a5a6; }
+.t-utility .card-val { color: #2ecc71; }
+.t-special .card-val { color: #9b59b6; }
+
+/* card type label */
+.card-type-lbl {
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  padding: 1px 0;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+.t-attack  .card-type-lbl { color: var(--red); }
+.t-magic   .card-type-lbl { color: var(--blue); }
+.t-defense .card-type-lbl { color: var(--gray); }
+.t-utility .card-type-lbl { color: var(--green); }
+.t-special .card-type-lbl { color: var(--purple); }
+
+@keyframes cardPlay {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.4); opacity: 0; }
+}
+.card.playing { animation: cardPlay 0.28s ease forwards; pointer-events: none; }
+
+/* ── OVERLAY ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  animation: fadeUp 0.35s;
+}
+.overlay-box {
+  background: var(--surface2);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 2.5rem 2.8rem;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+}
+.ov-title { font-family: 'Cinzel', serif; font-size: 1.9rem; margin-bottom: 0.6rem; }
+.ov-title.win  { color: var(--gold-light); }
+.ov-title.lose { color: #e74c3c; }
+.ov-sub { color: var(--text-muted); font-style: italic; margin-bottom: 1.4rem; }
+.ov-stats { display: flex; gap: 1.4rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.ov-s { text-align: center; }
+.ov-s-val { font-family: 'Cinzel', serif; font-size: 1.45rem; color: var(--gold); }
+.ov-s-lbl { font-size: 0.72rem; color: var(--text-muted); }
+.ov-btn {
+  font-family: 'Cinzel', serif;
+  background: transparent; color: var(--gold);
+  border: 1px solid rgba(201,162,39,0.5);
+  padding: 0.65rem 1.8rem;
+  cursor: pointer; border-radius: 4px;
+  font-size: 0.88rem; letter-spacing: 0.05em;
+  margin: 0.25rem;
+  transition: background 0.2s;
+}
+.ov-btn:hover { background: rgba(201,162,39,0.14); }
+.ov-btn.muted { color: var(--text-muted); border-color: var(--border); }
+.ov-btn.muted:hover { background: rgba(255,255,255,0.04); }
+
+/* scroll */
+.battle-log::-webkit-scrollbar { width: 3px; }
+.battle-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@keyframes shake {
+  0%,100% { transform:none; }
+  25% { transform:translateX(-5px); }
+  75% { transform:translateX(5px); }
+}
+.shaking { animation: shake 0.28s ease; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ CHARACTER CREATION ══════════ -->
+<div id="creation-screen" class="screen active">
+  <div class="creation-title">⚔ 龙与地下城</div>
+  <div class="creation-sub">选择你的种族与职业，踏入地下城深处</div>
+  <div class="sep"></div>
+
+  <div class="selection-group">
+    <div class="selection-label">🧬 种族</div>
+    <div class="option-grid" id="race-grid"></div>
+  </div>
+
+  <div class="selection-group">
+    <div class="selection-label">⚔ 职业</div>
+    <div class="option-grid" id="class-grid"></div>
+  </div>
+
+  <button id="begin-btn" disabled onclick="beginGame()">▶ 踏入地下城</button>
+</div>
+
+<!-- ══════════ BATTLE SCREEN ══════════ -->
+<div id="battle-screen" class="screen">
+  <div class="enemy-zone">
+    <div class="enemy-sprite" id="enemy-sprite">👺</div>
+    <div class="enemy-info">
+      <div class="enemy-name" id="enemy-name">地精</div>
+      <div class="enemy-intent" id="enemy-intent">👁 意图：侦测中…</div>
+      <div class="bar-row">
+        <span class="bar-label">HP</span>
+        <div class="bar-track"><div class="bar-fill ehp" id="ehp-bar" style="width:100%"></div></div>
+        <span class="bar-val" id="ehp-val">50/50</span>
+      </div>
+      <div id="enemy-shield-row"></div>
+    </div>
+  </div>
+
+  <div class="battle-log" id="battle-log">
+    <div class="log-entry system">— 战斗开始！—</div>
+  </div>
+
+  <div class="player-zone">
+    <div class="player-sprite" id="player-sprite">🧙</div>
+    <div class="player-info">
+      <div class="player-name" id="player-name">冒险者</div>
+      <div class="bar-row">
+        <span class="bar-label">HP</span>
+        <div class="bar-track"><div class="bar-fill hp" id="php-bar" style="width:100%"></div></div>
+        <span class="bar-val" id="php-val">80/80</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">MP</span>
+        <div class="bar-track"><div class="bar-fill mp" id="pmp-bar" style="width:100%"></div></div>
+        <span class="bar-val" id="pmp-val">30/30</span>
+      </div>
+      <div class="mini-stats">
+        <span class="mini-stat">攻击 <span id="s-atk">8</span></span>
+        <span class="mini-stat">防御 <span id="s-def">4</span></span>
+        <span class="mini-stat" id="s-shield-wrap" style="display:none">护盾 <span id="s-shield">0</span></span>
+      </div>
+      <div class="statuses" id="player-statuses"></div>
+    </div>
+    <div class="turn-ctrl">
+      <div class="round-lbl" id="round-lbl">第 1 回合</div>
+      <button class="end-btn" id="end-btn" onclick="endTurn()">结束回合 →</button>
+      <div class="deck-lbl" id="deck-lbl">手 0 库 0 弃 0</div>
+    </div>
+  </div>
+
+  <div class="hand-zone" id="hand-zone"></div>
+</div>
+
+<!-- ══════════ OVERLAY ══════════ -->
+<div class="overlay" id="overlay" style="display:none">
+  <div class="overlay-box">
+    <div class="ov-title" id="ov-title">胜利！</div>
+    <div class="ov-sub" id="ov-sub">你击败了敌人</div>
+    <div class="ov-stats" id="ov-stats"></div>
+    <div>
+      <button class="ov-btn" onclick="nextBattle()">继续探索 →</button>
+      <button class="ov-btn muted" onclick="restartGame()">返回营地</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ──────────────────── DATA ──────────────────── */
+const RACES = [
+  { id:'human',     name:'人类',   emoji:'🧑', desc:'全能冒险者', stats:{hp:5,mp:5,atk:1,def:1},   bonus:'每回合额外摸1张牌' },
+  { id:'elf',       name:'精灵',   emoji:'🧝', desc:'古老森林之子', stats:{hp:0,mp:15,atk:2,def:0}, bonus:'法术费用-1' },
+  { id:'dwarf',     name:'矮人',   emoji:'🪨', desc:'钢铁意志',   stats:{hp:20,mp:0,atk:0,def:3},   bonus:'防御牌护盾+2' },
+  { id:'tiefling',  name:'魔裔',   emoji:'😈', desc:'地狱血脉',   stats:{hp:0,mp:10,atk:4,def:0},   bonus:'火焰法术+2' },
+  { id:'dragonborn',name:'龙裔',   emoji:'🐉', desc:'远古龙族血脉', stats:{hp:10,mp:0,atk:3,def:2}, bonus:'携带龙息牌×2' },
+];
+const CLASSES = [
+  { id:'warrior', name:'战士',   emoji:'⚔️', desc:'钢铁与盾牌',  stats:{hp:40,mp:10,atk:6,def:5}, sprite:'🛡️' },
+  { id:'mage',    name:'法师',   emoji:'🔮', desc:'奥术掌控',    stats:{hp:25,mp:40,atk:2,def:1}, sprite:'🧙' },
+  { id:'rogue',   name:'盗贼',   emoji:'🗡️', desc:'暗影刺客',    stats:{hp:30,mp:15,atk:8,def:2}, sprite:'🥷' },
+  { id:'paladin', name:'圣骑士', emoji:'✝️', desc:'圣光与钢铁',  stats:{hp:35,mp:25,atk:5,def:4}, sprite:'⚔️' },
+  { id:'ranger',  name:'游侠',   emoji:'🏹', desc:'自然射手',    stats:{hp:30,mp:20,atk:7,def:3}, sprite:'🏹' },
+];
+const CARDS = {
+  // ── WARRIOR
+  slash:       {name:'斩击',    type:'attack',  cost:0, emoji:'⚔️',  desc:'造成物理伤害',           value:6,  eff:'dmg'},
+  heavyBlow:   {name:'重击',    type:'attack',  cost:0, emoji:'🔨',  desc:'强力打击',               value:10, eff:'dmg'},
+  shieldBash:  {name:'盾击',    type:'attack',  cost:0, emoji:'🛡️',  desc:'伤害并获得护盾',          value:5,  eff:'dmg_shield', b:4},
+  ironWall:    {name:'铁壁',    type:'defense', cost:0, emoji:'🧱',  desc:'获得大量护盾',            value:10, eff:'shield'},
+  battleCry:   {name:'战吼',    type:'utility', cost:0, emoji:'📣',  desc:'摸2张牌',                value:2,  eff:'draw'},
+  whirlwind:   {name:'旋风斩',  type:'attack',  cost:2, emoji:'🌀',  desc:'毁灭性旋风伤害',          value:12, eff:'dmg'},
+  rally:       {name:'集结',    type:'utility', cost:0, emoji:'🚩',  desc:'本回合攻击+3',            value:3,  eff:'buff_atk'},
+  // ── MAGE
+  arcBolt:     {name:'奥术弹',  type:'magic',   cost:0, emoji:'✨',  desc:'基础奥术伤害',            value:5,  eff:'dmg'},
+  fireball:    {name:'火球术',  type:'magic',   cost:2, emoji:'🔥',  desc:'爆炸性火焰伤害',          value:12, eff:'dmg'},
+  frostBolt:   {name:'冰锥术',  type:'magic',   cost:1, emoji:'❄️',  desc:'伤害+眩晕敌人',           value:7,  eff:'dmg_stun'},
+  manaSurge:   {name:'法力涌动', type:'utility', cost:0, emoji:'💎', desc:'恢复3点法力',             value:3,  eff:'restore_mp'},
+  blink:       {name:'闪现',    type:'defense', cost:1, emoji:'💨',  desc:'获得护盾+摸1牌',          value:5,  eff:'shield_draw', b:1},
+  meteor:      {name:'陨石术',  type:'magic',   cost:4, emoji:'☄️',  desc:'毁灭性陨石打击',          value:28, eff:'dmg'},
+  manaShield:  {name:'法力护盾', type:'magic',   cost:2, emoji:'🌊', desc:'魔法护盾',               value:14, eff:'shield'},
+  // ── ROGUE
+  stab:        {name:'刺击',    type:'attack',  cost:0, emoji:'🗡️',  desc:'快速刺击',               value:5,  eff:'dmg'},
+  backstab:    {name:'背刺',    type:'attack',  cost:1, emoji:'🔪',  desc:'暴击伤害',               value:14, eff:'dmg'},
+  poison:      {name:'淬毒',    type:'special', cost:1, emoji:'☠️',  desc:'施加3层中毒',             value:3,  eff:'poison'},
+  smoke:       {name:'烟雾弹',  type:'defense', cost:0, emoji:'💨',  desc:'获得护盾',               value:6,  eff:'shield'},
+  combo:       {name:'连击',    type:'attack',  cost:0, emoji:'👊',  desc:'伤害+摸1牌',             value:3,  eff:'dmg_draw', b:1},
+  shadowStep:  {name:'影步',    type:'special', cost:2, emoji:'🌑',  desc:'攻击+4并摸3牌',           value:4,  eff:'buff_draw', b:3},
+  // ── PALADIN
+  smite:       {name:'圣击',    type:'magic',   cost:1, emoji:'⚡',  desc:'圣光伤害',               value:9,  eff:'dmg'},
+  heal:        {name:'治愈术',  type:'utility', cost:2, emoji:'💚',  desc:'恢复8点生命',             value:8,  eff:'heal'},
+  holyShield:  {name:'圣盾',    type:'defense', cost:0, emoji:'🛡️',  desc:'圣光护盾',               value:8,  eff:'shield'},
+  consecrate:  {name:'奉献',    type:'magic',   cost:3, emoji:'🕊️',  desc:'治疗+护盾',              value:10, eff:'heal_shield', b:8},
+  divineWrath: {name:'神圣愤怒', type:'magic',   cost:3, emoji:'🌟', desc:'神圣爆发伤害',            value:20, eff:'dmg'},
+  // ── RANGER
+  arrow:       {name:'箭矢',    type:'attack',  cost:0, emoji:'🏹',  desc:'精准远程射击',            value:6,  eff:'dmg'},
+  multishot:   {name:'万箭齐发', type:'attack',  cost:2, emoji:'🎯', desc:'3连箭攻击',              value:5,  eff:'multishot'},
+  nature:      {name:'自然之力', type:'utility', cost:1, emoji:'🍃', desc:'治疗+摸1牌',             value:5,  eff:'heal_draw', b:1},
+  trap:        {name:'陷阱',    type:'special', cost:1, emoji:'🪤',  desc:'敌人攻击-3（2回合）',     value:3,  eff:'debuff'},
+  eagleEye:    {name:'鹰眼',    type:'utility', cost:0, emoji:'🦅',  desc:'摸2张牌',                value:2,  eff:'draw'},
+  // ── SPECIAL
+  dragonBreath:{name:'龙息',    type:'special', cost:2, emoji:'🐲',  desc:'强力龙焰爆发',            value:18, eff:'dmg'},
+  // ── COMMON
+  potion:      {name:'治疗药水', type:'utility', cost:0, emoji:'🧪', desc:'恢复5点生命',             value:5,  eff:'heal'},
+  bandage:     {name:'绷带',    type:'utility', cost:0, emoji:'🩹',  desc:'恢复3点生命',             value:3,  eff:'heal'},
+};
+const DECKS = {
+  warrior: ['slash','slash','slash','heavyBlow','heavyBlow','shieldBash','shieldBash','ironWall','ironWall','battleCry','rally','whirlwind','potion','bandage'],
+  mage:    ['arcBolt','arcBolt','arcBolt','fireball','fireball','frostBolt','frostBolt','manaSurge','manaSurge','blink','meteor','manaShield','potion'],
+  rogue:   ['stab','stab','stab','stab','backstab','backstab','poison','poison','smoke','smoke','combo','combo','shadowStep','potion'],
+  paladin: ['smite','smite','smite','heal','heal','holyShield','holyShield','holyShield','consecrate','divineWrath','divineWrath','potion','bandage'],
+  ranger:  ['arrow','arrow','arrow','arrow','multishot','multishot','nature','nature','trap','trap','eagleEye','eagleEye','potion'],
+};
+const ENEMIES = [
+  {name:'地精盗贼',   emoji:'👺', hp:40,  atk:6,  def:0, xp:50,  gold:30,  beh:'agg'},
+  {name:'骷髅战士',   emoji:'💀', hp:55,  atk:8,  def:3, xp:70,  gold:40,  beh:'bal'},
+  {name:'食人魔',     emoji:'👹', hp:80,  atk:12, def:2, xp:100, gold:60,  beh:'hvy'},
+  {name:'亡灵法师',   emoji:'🧟', hp:55,  atk:8,  def:0, xp:90,  gold:55,  beh:'mag'},
+  {name:'石像鬼',     emoji:'🗿', hp:105, atk:10, def:8, xp:130, gold:80,  beh:'tnk'},
+  {name:'暗焰巨龙',   emoji:'🐲', hp:160, atk:20, def:5, xp:300, gold:200, beh:'bos'},
+];
+
+/* ──────────────────── STATE ──────────────────── */
+let G = {
+  race:null, cls:null,
+  player:null, enemy:null,
+  hand:[], deck:[], discard:[],
+  round:1, myTurn:true,
+  battleCount:0, totalDmg:0, cardsPlayed:0,
+};
+
+/* ──────────────────── CREATION ──────────────────── */
+function initCreation() {
+  buildGrid('race-grid', RACES, 'race');
+  buildGrid('class-grid', CLASSES, 'cls');
+}
+function buildGrid(id, data, key) {
+  const el = document.getElementById(id);
+  data.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'option-card';
+    const stats = item.stats;
+    const statHtml = Object.entries(stats)
+      .filter(([,v]) => v !== 0)
+      .map(([k,v]) => `<span class="stat-badge">${v>0?'+':''}${v}${k.toUpperCase()}</span>`)
+      .join('');
+    d.innerHTML = `
+      <span class="option-emoji">${item.emoji}</span>
+      <div class="option-name">${item.name}</div>
+      <div class="option-desc">${item.desc}</div>
+      <div class="option-stats">${statHtml}</div>
+      ${item.bonus ? `<div class="option-bonus">✦ ${item.bonus}</div>` : ''}
+    `;
+    d.onclick = () => {
+      el.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      d.classList.add('selected');
+      G[key] = item.id;
+      checkBegin();
+    };
+    el.appendChild(d);
+  });
+}
+function checkBegin() {
+  document.getElementById('begin-btn').disabled = !(G.race && G.cls);
+}
+function beginGame() {
+  buildPlayer();
+  showScreen('battle-screen');
+  startBattle();
+}
+function buildPlayer() {
+  const race = RACES.find(r => r.id === G.race);
+  const cls  = CLASSES.find(c => c.id === G.cls);
+  const s = cls.stats;
+  const r = race.stats;
+  G.player = {
+    name:   race.name + cls.name,
+    sprite: cls.sprite,
+    race:   G.race,
+    class:  G.cls,
+    maxHp:  s.hp + r.hp,
+    hp:     s.hp + r.hp,
+    maxMp:  s.mp + r.mp,
+    mp:     s.mp + r.mp,
+    atk:    s.atk + r.atk,
+    def:    s.def + r.def,
+    shield: 0,
+    statuses: [],
+  };
+  // Build deck
+  let keys = [...DECKS[cls.id]];
+  if (G.race === 'dragonborn') keys.push('dragonBreath','dragonBreath');
+  G.deck    = shuffle(keys.map(k => ({...CARDS[k], uid: Math.random().toString(36)})));
+  G.hand    = [];
+  G.discard = [];
+}
+
+/* ──────────────────── BATTLE INIT ──────────────────── */
+function startBattle() {
+  const idx = Math.min(G.battleCount, ENEMIES.length - 1);
+  const e = ENEMIES[idx];
+  G.enemy = { ...e, maxHp: e.hp, shield: 0, statuses: [], intent: null };
+  G.player.shield = 0;
+  G.player.statuses = [];
+  G.round = 1;
+  G.myTurn = true;
+
+  for (let i = 0; i < 5; i++) drawCard();
+  renderAll();
+  planIntent();
+  addLog('system', `⚔ 遭遇 ${G.enemy.name}！战斗开始！`);
+}
+function planIntent() {
+  const e = G.enemy;
+  const base = e.atk;
+  let intent;
+  switch(e.beh) {
+    case 'agg': intent = {type:'atk', val: base + rng(0,4), lbl:`⚔ 攻击 ${base+2}`}; break;
+    case 'bal': intent = Math.random()<0.3
+      ? {type:'def', val:8,        lbl:`🛡 防御 8`}
+      : {type:'atk', val: base + rng(0,3), lbl:`⚔ 攻击 ${base+1}`}; break;
+    case 'hvy': intent = {type:'atk', val: base + rng(2,6), lbl:`💥 重击 ${base+4}`}; break;
+    case 'mag': intent = {type:'mag', val: base + rng(2,5), lbl:`✨ 魔法 ${base+3}`}; break;
+    case 'tnk': intent = Math.random()<0.45
+      ? {type:'def', val:14,       lbl:`🛡 强化防御 14`}
+      : {type:'atk', val: base + rng(0,2), lbl:`⚔ 攻击 ${base}`}; break;
+    case 'bos': intent = {type:'atk', val: base + rng(3,9), lbl:`🔥 龙爪 ${base+6}`}; break;
+    default:    intent = {type:'atk', val: base,             lbl:`⚔ 攻击 ${base}`};
+  }
+  G.enemy.intent = intent;
+  document.getElementById('enemy-intent').textContent = `👁 意图：${intent.lbl}`;
+}
+
+/* ──────────────────── CARD ENGINE ──────────────────── */
+function drawCard() {
+  if (!G.deck.length) {
+    if (!G.discard.length) return;
+    G.deck = shuffle([...G.discard]);
+    G.discard = [];
+    addLog('system','♻ 弃牌堆已洗回牌库！');
+  }
+  G.hand.push(G.deck.pop());
+  updateDeckLbl();
+}
+function playCard(idx) {
+  if (!G.myTurn) return;
+  const card = G.hand[idx];
+  if (!card) return;
+  let cost = card.cost;
+  if (G.race === 'elf' && card.type === 'magic') cost = Math.max(0, cost - 1);
+  if (G.player.mp < cost) { addLog('system',`⚠ 法力不足！需要 ${cost} MP`); return; }
+
+  const els = document.querySelectorAll('.card');
+  if (els[idx]) { els[idx].classList.add('playing'); }
+
+  setTimeout(() => {
+    G.player.mp -= cost;
+    const played = G.hand.splice(idx, 1)[0];
+    G.discard.push(played);
+    G.cardsPlayed++;
+    applyCard(played);
+    renderAll();
+    checkEnd();
+  }, 260);
+}
+function applyCard(c) {
+  const p = G.player, e = G.enemy;
+  let msg = '';
+  switch(c.eff) {
+    case 'dmg': {
+      let dmg = c.value + p.atk;
+      if (p.race==='tiefling' && (c.type==='magic'||c.name.includes('火')||c.name.includes('龙'))) dmg += 2;
+      const done = hitEnemy(dmg);
+      G.totalDmg += done;
+      msg = `🗡 ${p.name} 用【${c.name}】造成 ${done} 点伤害！`;
+      break;
+    }
+    case 'shield': {
+      let v = c.value + (p.race==='dwarf'?2:0);
+      p.shield += v;
+      msg = `🛡 ${p.name} 用【${c.name}】获得 ${v} 护盾！`;
+      break;
+    }
+    case 'heal': {
+      const h = Math.min(c.value, p.maxHp - p.hp);
+      p.hp += h;
+      msg = `💚 ${p.name} 用【${c.name}】恢复 ${h} 生命！`;
+      break;
+    }
+    case 'draw': {
+      for (let i=0;i<c.value;i++) drawCard();
+      msg = `📖 ${p.name} 用【${c.name}】摸了 ${c.value} 张牌！`;
+      break;
+    }
+    case 'restore_mp': {
+      p.mp = Math.min(p.maxMp, p.mp + c.value);
+      msg = `💧 ${p.name} 用【${c.name}】恢复 ${c.value} MP！`;
+      break;
+    }
+    case 'dmg_shield': {
+      const done = hitEnemy(c.value + p.atk);
+      G.totalDmg += done;
+      const sv = c.b + (p.race==='dwarf'?2:0);
+      p.shield += sv;
+      msg = `⚔ ${p.name} 用【${c.name}】造成 ${done} 伤害并获得 ${sv} 护盾！`;
+      break;
+    }
+    case 'dmg_stun': {
+      const done = hitEnemy(c.value + p.atk);
+      G.totalDmg += done;
+      pushStatus(e.statuses, {name:'眩晕', type:'debuff', dur:1, val:0});
+      msg = `❄ ${p.name} 用【${c.name}】造成 ${done} 伤害并眩晕敌人！`;
+      break;
+    }
+    case 'multishot': {
+      let tot = 0;
+      for (let i=0;i<3;i++) tot += hitEnemy(c.value + Math.floor(p.atk/2));
+      G.totalDmg += tot;
+      msg = `🏹 万箭齐发造成总计 ${tot} 点伤害！`;
+      break;
+    }
+    case 'poison': {
+      const cur = e.statuses.find(s=>s.name==='中毒');
+      const stacks = (cur?.val||0) + c.value;
+      e.statuses = e.statuses.filter(s=>s.name!=='中毒');
+      e.statuses.push({name:'中毒', type:'poison', dur:4, val:stacks});
+      msg = `☠ ${p.name} 给敌人施加了 ${stacks} 层中毒！`;
+      break;
+    }
+    case 'buff_atk': {
+      p.statuses.push({name:`攻击+${c.value}`, type:'buff', dur:2, val:c.value});
+      p.atk += c.value;
+      msg = `📣 ${p.name} 攻击力提升 ${c.value}！`;
+      break;
+    }
+    case 'buff_draw': {
+      p.atk += c.value;
+      p.statuses.push({name:`攻击+${c.value}`, type:'buff', dur:2, val:c.value});
+      for (let i=0;i<c.b;i++) drawCard();
+      msg = `🌑 ${p.name} 影步！攻击+${c.value} 并摸 ${c.b} 牌！`;
+      break;
+    }
+    case 'dmg_draw': {
+      const done = hitEnemy(c.value + p.atk);
+      G.totalDmg += done;
+      for (let i=0;i<c.b;i++) drawCard();
+      msg = `👊 ${p.name} 连击造成 ${done} 伤害并摸 ${c.b} 牌！`;
+      break;
+    }
+    case 'shield_draw': {
+      const sv = c.value + (p.race==='dwarf'?2:0);
+      p.shield += sv;
+      for (let i=0;i<c.b;i++) drawCard();
+      msg = `💨 获得 ${sv} 护盾并摸 ${c.b} 牌！`;
+      break;
+    }
+    case 'heal_shield': {
+      const h = Math.min(c.value, p.maxHp-p.hp);
+      p.hp += h;
+      const sv = c.b + (p.race==='dwarf'?2:0);
+      p.shield += sv;
+      msg = `🕊 ${p.name} 恢复 ${h} 生命获得 ${sv} 护盾！`;
+      break;
+    }
+    case 'heal_draw': {
+      const h = Math.min(c.value, p.maxHp-p.hp);
+      p.hp += h;
+      for (let i=0;i<c.b;i++) drawCard();
+      msg = `🍃 恢复 ${h} 生命并摸 ${c.b} 牌！`;
+      break;
+    }
+    case 'debuff': {
+      pushStatus(e.statuses, {name:'受困(-3ATK)', type:'debuff', dur:2, val:3});
+      msg = `🪤 设置陷阱！敌人攻击-3（2回合）！`;
+      break;
+    }
+  }
+  addLog('player', msg);
+}
+function hitEnemy(raw) {
+  const e = G.enemy;
+  let dmg = Math.max(1, raw - e.def);
+  if (e.shield > 0) {
+    const abs = Math.min(e.shield, dmg);
+    e.shield -= abs; dmg -= abs;
+  }
+  e.hp = Math.max(0, e.hp - dmg);
+  return Math.max(1, dmg);
+}
+function pushStatus(arr, s) {
+  const ex = arr.findIndex(x => x.name === s.name);
+  if (ex >= 0) arr[ex] = s; else arr.push(s);
+}
+
+/* ──────────────────── TURN FLOW ──────────────────── */
+function endTurn() {
+  if (!G.myTurn) return;
+  G.myTurn = false;
+  document.getElementById('end-btn').disabled = true;
+  addLog('system','── 结束回合，敌人行动 ──');
+  setTimeout(enemyTurn, 420);
+}
+function enemyTurn() {
+  const e = G.enemy, p = G.player;
+
+  // poison tick
+  const pois = e.statuses.find(s => s.name === '中毒');
+  if (pois) {
+    e.hp = Math.max(0, e.hp - pois.val);
+    addLog('player', `☠ 中毒造成 ${pois.val} 伤害！`);
+    pois.dur--;
+    if (pois.dur <= 0) e.statuses = e.statuses.filter(s => s.name !== '中毒');
+    if (checkEnd()) return;
+  }
+
+  // tick other statuses
+  e.statuses = e.statuses.filter(s => { s.dur--; return s.dur > 0; });
+
+  const stunned = e.statuses.some(s => s.name === '眩晕');
+  if (stunned) {
+    addLog('enemy', `❄ ${e.name} 被眩晕，无法行动！`);
+    e.statuses = e.statuses.filter(s => s.name !== '眩晕');
+  } else {
+    const intent = e.intent;
+    if (intent.type === 'atk' || intent.type === 'mag') {
+      let av = intent.val;
+      const db = e.statuses.find(s => s.name.includes('受困'));
+      if (db) av = Math.max(1, av - db.val);
+      let dmg = Math.max(1, av - p.def);
+      if (p.shield > 0) {
+        const abs = Math.min(p.shield, dmg);
+        p.shield -= abs; dmg -= abs;
+        if (abs > 0) addLog('system', `🛡 护盾吸收 ${abs} 点伤害！`);
+      }
+      if (dmg > 0) {
+        p.hp = Math.max(0, p.hp - dmg);
+        addLog('enemy', `💥 ${e.name} 造成 ${dmg} 点伤害！`);
+        const ps = document.getElementById('player-sprite');
+        ps.classList.add('shaking');
+        setTimeout(() => ps.classList.remove('shaking'), 300);
+      }
+    } else {
+      e.shield += intent.val;
+      addLog('enemy', `🛡 ${e.name} 获得 ${intent.val} 护盾！`);
+    }
+  }
+
+  if (checkEnd()) return;
+  setTimeout(startMyTurn, 460);
+}
+function startMyTurn() {
+  const p = G.player;
+  G.round++;
+  G.myTurn = true;
+
+  // tick player buffs
+  p.statuses = p.statuses.filter(s => {
+    s.dur--;
+    if (s.dur <= 0 && s.type === 'buff' && s.name.startsWith('攻击+')) {
+      p.atk -= s.val;
+      addLog('system', `攻击增益结束`);
+      return false;
+    }
+    return s.dur > 0;
+  });
+
+  const drawN = 3 + (G.race === 'human' ? 1 : 0);
+  for (let i = 0; i < drawN; i++) drawCard();
+  const mpRegen = Math.floor(p.maxMp * 0.4);
+  p.mp = Math.min(p.maxMp, p.mp + mpRegen);
+
+  planIntent();
+  document.getElementById('end-btn').disabled = false;
+  document.getElementById('round-lbl').textContent = `第 ${G.round} 回合`;
+  addLog('system', `── 第 ${G.round} 回合开始 ──`);
+  renderAll();
+}
+function checkEnd() {
+  if (G.enemy.hp <= 0) { renderAll(); showVictory(); return true; }
+  if (G.player.hp <= 0) { renderAll(); showDefeat();  return true; }
+  renderAll(); return false;
+}
+
+/* ──────────────────── RENDER ──────────────────── */
+function renderAll() {
+  const p = G.player, e = G.enemy;
+  // enemy
+  document.getElementById('enemy-sprite').textContent = e.emoji;
+  document.getElementById('enemy-name').textContent   = e.name;
+  const ehp = Math.max(0, e.hp);
+  document.getElementById('ehp-bar').style.width = pct(ehp, e.maxHp);
+  document.getElementById('ehp-val').textContent = `${ehp}/${e.maxHp}`;
+  const esr = document.getElementById('enemy-shield-row');
+  esr.innerHTML = e.shield > 0 ? `<span class="shield-tag">🛡 ${e.shield}</span>` : '';
+  // player
+  document.getElementById('player-sprite').textContent = p.sprite;
+  document.getElementById('player-name').textContent   = p.name;
+  const php = Math.max(0, p.hp);
+  document.getElementById('php-bar').style.width = pct(php, p.maxHp);
+  document.getElementById('php-val').textContent = `${php}/${p.maxHp}`;
+  document.getElementById('pmp-bar').style.width = pct(p.mp, p.maxMp);
+  document.getElementById('pmp-val').textContent = `${p.mp}/${p.maxMp}`;
+  document.getElementById('s-atk').textContent = p.atk;
+  document.getElementById('s-def').textContent = p.def;
+  const sw = document.getElementById('s-shield-wrap');
+  if (p.shield > 0) { sw.style.display='inline'; document.getElementById('s-shield').textContent = p.shield; }
+  else sw.style.display = 'none';
+  const se = document.getElementById('player-statuses');
+  se.innerHTML = p.statuses.map(s => `<span class="status-tag ${s.type}">${s.name}(${s.dur})</span>`).join('');
+  renderHand();
+  updateDeckLbl();
+}
+function renderHand() {
+  const hz = document.getElementById('hand-zone');
+  hz.innerHTML = '';
+  G.hand.forEach((card, i) => {
+    let cost = card.cost;
+    if (G.race === 'elf' && card.type === 'magic') cost = Math.max(0, cost - 1);
+    const canPlay = G.myTurn && G.player.mp >= cost;
+    const d = document.createElement('div');
+    d.className = `card t-${card.type}${canPlay ? '' : ' disabled'}`;
+    d.innerHTML = `
+      <div class="card-hd">
+        <span class="card-nm">${card.name}</span>
+        <span class="card-cost${cost===0?' free':''}">${cost>0?cost+'★':'◇'}</span>
+      </div>
+      <div class="card-art">${card.emoji}</div>
+      <div class="card-stripe"></div>
+      <div class="card-type-lbl">${typeName(card.type)}</div>
+      <div class="card-desc">${card.desc}</div>
+      <div class="card-val">${valDisplay(card)}</div>
+    `;
+    d.onclick = () => canPlay && playCard(i);
+    hz.appendChild(d);
+  });
+}
+const TYPE_NAMES = {attack:'物理攻击', magic:'法术', defense:'防御', utility:'功能', special:'特殊'};
+function typeName(t) { return TYPE_NAMES[t] || t; }
+function valDisplay(c) {
+  const a = G.player.atk;
+  switch(c.eff) {
+    case 'dmg':         return `⚔ ${c.value + a}`;
+    case 'dmg_shield':  return `⚔${c.value+a} 🛡${c.b}`;
+    case 'dmg_stun':    return `⚔ ${c.value+a}`;
+    case 'dmg_draw':    return `⚔ ${c.value+a}`;
+    case 'multishot':   return `⚔ ${c.value+Math.floor(a/2)}×3`;
+    case 'shield':      return `🛡 ${c.value}`;
+    case 'shield_draw': return `🛡${c.value} 📖${c.b}`;
+    case 'heal':        return `💚 ${c.value}`;
+    case 'heal_shield': return `💚${c.value} 🛡${c.b}`;
+    case 'heal_draw':   return `💚${c.value} 📖${c.b}`;
+    case 'draw':        return `📖 +${c.value}`;
+    case 'restore_mp':  return `💧 +${c.value}`;
+    case 'buff_atk':    return `⬆ ATK+${c.value}`;
+    case 'buff_draw':   return `⬆ATK+${c.value} 📖${c.b}`;
+    case 'poison':      return `☠ ${c.value}层`;
+    case 'debuff':      return `🪤 ATK-3`;
+    default:            return '✦';
+  }
+}
+function updateDeckLbl() {
+  document.getElementById('deck-lbl').textContent = `手 ${G.hand.length} 库 ${G.deck.length} 弃 ${G.discard.length}`;
+}
+function pct(v, max) { return (Math.max(0, Math.min(1, v/max)) * 100).toFixed(1) + '%'; }
+
+/* ──────────────────── OVERLAYS ──────────────────── */
+function showVictory() {
+  const e = G.enemy;
+  document.getElementById('ov-title').textContent = '⚔ 胜利！';
+  document.getElementById('ov-title').className   = 'ov-title win';
+  document.getElementById('ov-sub').textContent   = `你击败了 ${e.name}！`;
+  document.getElementById('ov-stats').innerHTML   = `
+    <div class="ov-s"><div class="ov-s-val">${e.xp}</div><div class="ov-s-lbl">经验值</div></div>
+    <div class="ov-s"><div class="ov-s-val">${e.gold}</div><div class="ov-s-lbl">金币</div></div>
+    <div class="ov-s"><div class="ov-s-val">${G.totalDmg}</div><div class="ov-s-lbl">总伤害</div></div>
+    <div class="ov-s"><div class="ov-s-val">${G.player.hp}/${G.player.maxHp}</div><div class="ov-s-lbl">剩余HP</div></div>
+  `;
+  document.getElementById('overlay').style.display = 'flex';
+  G.battleCount++;
+}
+function showDefeat() {
+  document.getElementById('ov-title').textContent = '💀 阵亡';
+  document.getElementById('ov-title').className   = 'ov-title lose';
+  document.getElementById('ov-sub').textContent   = `你被 ${G.enemy.name} 击败了…`;
+  document.getElementById('ov-stats').innerHTML   = `
+    <div class="ov-s"><div class="ov-s-val">${G.battleCount}</div><div class="ov-s-lbl">击败敌人</div></div>
+    <div class="ov-s"><div class="ov-s-val">${G.cardsPlayed}</div><div class="ov-s-lbl">使用卡牌</div></div>
+    <div class="ov-s"><div class="ov-s-val">${G.totalDmg}</div><div class="ov-s-lbl">总伤害</div></div>
+  `;
+  document.getElementById('overlay').style.display = 'flex';
+}
+function nextBattle() {
+  document.getElementById('overlay').style.display = 'none';
+  G.player.hp = Math.min(G.player.maxHp, G.player.hp + 15);
+  const all = [...G.hand, ...G.deck, ...G.discard];
+  G.deck = shuffle(all); G.hand = []; G.discard = [];
+  document.getElementById('battle-log').innerHTML = '';
+  startBattle();
+}
+function restartGame() {
+  document.getElementById('overlay').style.display = 'none';
+  G = {race:null,cls:null,player:null,enemy:null,hand:[],deck:[],discard:[],round:1,myTurn:true,battleCount:0,totalDmg:0,cardsPlayed:0};
+  document.getElementById('race-grid').querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('class-grid').querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('begin-btn').disabled = true;
+  showScreen('creation-screen');
+}
+
+/* ──────────────────── UTILS ──────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function addLog(type, msg) {
+  const log = document.getElementById('battle-log');
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  entry.textContent = msg;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+  while (log.children.length > 35) log.removeChild(log.firstChild);
+}
+function shuffle(arr) {
+  for (let i = arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function rng(a, b) { return a + Math.floor(Math.random()*(b-a+1)); }
+
+/* ──────────────────── BOOT ──────────────────── */
+initCreation();
+</script>
+</body>
+</html>

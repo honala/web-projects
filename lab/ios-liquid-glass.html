@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS Liquid Glass · 真液态玻璃</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --spec-x: 30%;
+  --spec-y: 18%;
+  --font: -apple-system, 'SF Pro Display', 'Inter', sans-serif;
+}
+
+html, body {
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #0a0010;
+}
+
+/* ══════════════════════════════
+   WALLPAPER — iOS aurora gradient
+══════════════════════════════ */
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 20%, #ff6b6b 0%, transparent 50%),
+    radial-gradient(ellipse 70% 70% at 85% 10%, #c471ed 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 50% 80%, #12c2e9 0%, transparent 50%),
+    radial-gradient(ellipse 80% 50% at 80% 70%, #f64f59 0%, transparent 45%),
+    radial-gradient(ellipse 90% 60% at 10% 80%, #43e97b 0%, transparent 55%),
+    linear-gradient(135deg, #1a0533 0%, #0d1b4b 50%, #0a2a1a 100%);
+  animation: wallpaper-shift 20s ease-in-out infinite alternate;
+}
+@keyframes wallpaper-shift {
+  0%   { filter: hue-rotate(0deg) brightness(1); }
+  100% { filter: hue-rotate(30deg) brightness(1.1); }
+}
+
+/* Bokeh blobs */
+.bokeh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bokeh-dot {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.25;
+  animation: bokeh-float ease-in-out infinite alternate;
+}
+.bd1 { width: 300px; height: 300px; background: rgba(255,200,100,0.8); top: 5%;  left: 10%; animation-duration: 15s; }
+.bd2 { width: 200px; height: 200px; background: rgba(100,200,255,0.9); top: 60%; right: 8%; animation-duration: 18s; animation-delay: -5s; }
+.bd3 { width: 250px; height: 250px; background: rgba(255,100,200,0.8); top: 40%; left: 50%; animation-duration: 12s; animation-delay: -9s; }
+.bd4 { width: 180px; height: 180px; background: rgba(100,255,180,0.8); bottom: 10%; left: 25%; animation-duration: 20s; animation-delay: -3s; }
+
+@keyframes bokeh-float {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(30px,-20px) scale(1.15); }
+}
+
+/* ══════════════════════════════
+   HIDDEN SVG DEFS
+══════════════════════════════ */
+.svg-defs { position: absolute; width: 0; height: 0; }
+
+/* ══════════════════════════════
+   TRUE iOS LIQUID GLASS SYSTEM
+   Layer stack (bottom → top):
+   1. backdrop-filter (blur+saturate)
+   2. base tint (rgba white)
+   3. caustic shimmer (::before, SVG filter)
+   4. specular glare (::after, radial gradient)
+   5. rim/edge light (box-shadow inset)
+   6. content
+══════════════════════════════ */
+.lg {
+  position: relative;
+  /* 1. The actual frosting */
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  /* 2. Base tint */
+  background: rgba(255,255,255,0.18);
+  /* 5. Rim lights — simulates glass thickness */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.75),
+    inset 0 -1px   0 rgba(255,255,255,0.10),
+    inset  1.5px 0 0 rgba(255,255,255,0.40),
+    inset -1px   0 0 rgba(255,255,255,0.08),
+    0 20px 60px rgba(0,0,0,0.20),
+    0  4px 16px rgba(0,0,0,0.12);
+  overflow: hidden;
+  /* Smooth light update */
+  transition: box-shadow 0.3s ease;
+}
+
+/* 3. Caustic shimmer — the shimmering organic bright patch */
+.lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 55% 35% at var(--spec-x) var(--spec-y),
+    rgba(255,255,255,0.72) 0%,
+    rgba(255,255,255,0.25) 35%,
+    transparent 70%
+  );
+  filter: url(#caustic-filter);
+  opacity: 0.65;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  transition: background 0.08s linear;
+}
+
+/* 4. Main specular glare — the crisp bright ellipse */
+.lg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 50% 30% at var(--spec-x) calc(var(--spec-y) - 3%),
+    rgba(255,255,255,0.82) 0%,
+    rgba(255,255,255,0.40) 25%,
+    rgba(255,255,255,0.05) 55%,
+    transparent 70%
+  );
+  pointer-events: none;
+  transition: background 0.08s linear;
+}
+
+/* Content must sit above pseudo-elements */
+.lg > * { position: relative; z-index: 2; }
+
+/* ── Hover state: deepen the shadow & lift ── */
+.lg-interactive {
+  transition: transform 0.35s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.35s ease;
+  cursor: default;
+}
+.lg-interactive:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.8),
+    inset 0 -1px   0 rgba(255,255,255,0.12),
+    inset  1.5px 0 0 rgba(255,255,255,0.45),
+    inset -1px   0 0 rgba(255,255,255,0.10),
+    0 30px 80px rgba(0,0,0,0.28),
+    0  6px 24px rgba(0,0,0,0.16);
+}
+
+/* ══════════════════════════════
+   SQUIRCLE SYSTEM
+   JS generates SVG clip-path,
+   applies via CSS variable
+══════════════════════════════ */
+[data-squircle] {
+  clip-path: var(--squircle-path);
+}
+/* Fallback while JS loads */
+[data-squircle="5"] { border-radius: 28%; }
+[data-squircle="4"] { border-radius: 24%; }
+[data-squircle="3"] { border-radius: 20%; }
+
+/* ══════════════════════════════
+   PAGE LAYOUT
+══════════════════════════════ */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 28px 120px;
+}
+
+/* ─── Dynamic Island ─── */
+.dynamic-island {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 200px;
+  height: 38px;
+  margin: 0 auto 60px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 4px 20px rgba(0,0,0,0.5);
+  backdrop-filter: blur(20px);
+}
+.di-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.4), #1a1a1a);
+}
+.di-cam {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2a2a2a, #0a0a0a);
+  border: 1.5px solid rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.di-cam::after {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(70,120,180,0.8), rgba(20,60,120,0.9));
+}
+
+/* ─── Page header ─── */
+.page-header {
+  text-align: center;
+  margin-bottom: 70px;
+}
+.page-header .eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 16px;
+}
+.page-header h1 {
+  font-size: clamp(42px, 7vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1.05;
+  text-shadow: 0 2px 40px rgba(0,0,0,0.3);
+}
+.page-header h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,200,255,0.8) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.page-header p {
+  margin-top: 14px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+}
+
+/* section label */
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(255,255,255,0.12), transparent);
+}
+
+/* ══════════════════════════════
+   COMPONENTS
+══════════════════════════════ */
+
+/* Navigation bar */
+.lg-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+.nav-logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.nav-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: #fff; }
+.nav-cta {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.nav-cta:hover { opacity: 0.85; }
+
+/* Hero card */
+.hero-card {
+  padding: 44px 44px 44px;
+  border-radius: 32px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 36px;
+  align-items: flex-start;
+}
+.hero-icon-wrap {
+  flex-shrink: 0;
+  width: 88px; height: 88px;
+}
+.squircle-icon {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+}
+.hero-text h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.hero-text p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.65;
+  font-weight: 300;
+}
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.tag-pill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.04em;
+}
+
+/* Two-column grid */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Notification card */
+.notif-card {
+  padding: 18px 20px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.notif-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.notif-icon.ni-purple { background: linear-gradient(135deg, #7b2ff7, #5b1bd4); }
+.notif-icon.ni-blue   { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+.notif-icon.ni-green  { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.notif-text { flex: 1; min-width: 0; }
+.notif-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.notif-body  { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-time  { font-size: 11px; color: rgba(255,255,255,0.4); white-space: nowrap; align-self: flex-start; }
+
+/* Widget cards */
+.widget-music {
+  padding: 24px;
+  border-radius: 28px;
+}
+.music-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.album-art {
+  width: 60px; height: 60px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f64f59, #c471ed, #12c2e9);
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.music-meta .song { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.music-meta .artist { font-size: 13px; color: rgba(255,255,255,0.55); }
+.progress-bar-bg {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: visible;
+}
+.progress-bar-fill {
+  width: 42%;
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.8);
+  position: relative;
+}
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: -3px; top: -4px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.music-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+.ctrl-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: color 0.2s, transform 0.15s;
+}
+.ctrl-btn:hover { color: #fff; transform: scale(1.15); }
+.ctrl-play {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: transform 0.2s, opacity 0.2s;
+  color: #000;
+}
+.ctrl-play:hover { transform: scale(1.08); opacity: 0.9; }
+
+/* Weather widget */
+.widget-weather {
+  padding: 24px;
+  border-radius: 28px;
+}
+.weather-temp {
+  font-size: 52px;
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.weather-temp sup { font-size: 24px; vertical-align: top; margin-top: 6px; display: inline-block; }
+.weather-desc { font-size: 15px; color: rgba(255,255,255,0.6); margin: 6px 0 20px; font-weight: 300; }
+.weather-icon { font-size: 40px; float: right; margin-top: -70px; }
+.weather-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.weather-item { text-align: center; }
+.weather-item .wi-val { font-size: 15px; font-weight: 600; color: #fff; }
+.weather-item .wi-key { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* Squircle Showcase */
+.squircle-showcase {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 32px;
+  border-radius: 28px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.sq-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.sq-shape {
+  width: 72px;
+  height: 72px;
+  background: rgba(255,255,255,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: relative;
+  /* rim light even on these */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(255,255,255,0.1),
+    inset 1.5px 0 0 rgba(255,255,255,0.4),
+    0 4px 20px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+.sq-shape:hover { transform: scale(1.1) rotate(-5deg); }
+.sq-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+.sq-label span {
+  display: block;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 2px;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 32px;
+  border-radius: 28px;
+  margin-bottom: 16px;
+}
+.lg-btn {
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: none;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.23,1,0.32,1), box-shadow 0.25s;
+  letter-spacing: -0.01em;
+}
+.lg-btn-glass {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(255,255,255,0.1),
+    inset 1px 0 0 rgba(255,255,255,0.4),
+    0 4px 20px rgba(0,0,0,0.2);
+}
+.lg-btn-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at var(--spec-x, 30%) 30%,
+    rgba(255,255,255,0.6) 0%, transparent 70%);
+  filter: url(#caustic-filter);
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.lg-btn-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(ellipse 50% 40% at var(--spec-x, 30%) 25%,
+    rgba(255,255,255,0.75) 0%, transparent 60%);
+  pointer-events: none;
+}
+.lg-btn-glass:hover { transform: scale(1.05) translateY(-2px); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.8), inset 0 -1px 0 rgba(255,255,255,0.1), 0 8px 30px rgba(0,0,0,0.25); }
+.lg-btn-glass:active { transform: scale(0.97); }
+.lg-btn span { position: relative; z-index: 2; }
+
+.lg-btn-white {
+  background: rgba(255,255,255,0.92);
+  color: #000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 #fff;
+}
+.lg-btn-white:hover { transform: scale(1.04) translateY(-2px); }
+
+.lg-btn-dark {
+  background: rgba(0,0,0,0.5);
+  color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 20px rgba(0,0,0,0.3);
+}
+.lg-btn-dark:hover { transform: scale(1.04) translateY(-2px); background: rgba(0,0,0,0.6); }
+
+/* Technique breakdown card */
+.technique-card {
+  padding: 36px;
+  border-radius: 28px;
+  margin-bottom: 16px;
+}
+.tech-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.tech-item {}
+.tech-item .ti-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tech-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.12);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.tech-item .ti-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* n-value annotation cards */
+.n-annotation {
+  padding: 16px 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.na-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9); }
+.na-formula { font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'SF Mono', 'Menlo', monospace; }
+.na-preview {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.3);
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.7);
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding-top: 60px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.footer p { font-size: 12px; color: rgba(255,255,255,0.25); letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  .grid-2, .tech-grid { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .hero-card { flex-direction: column; gap: 20px; }
+  .nav-links { display: none; }
+  .squircle-showcase { gap: 12px; padding: 28px 16px; }
+  .btn-row { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- SVG filter definitions (hidden) -->
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Caustic light filter: organic shimmering highlight -->
+    <filter id="caustic-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency="0.035 0.028"
+        numOctaves="3"
+        seed="4"
+        result="noise">
+        <animate attributeName="baseFrequency"
+          values="0.035 0.028;0.042 0.022;0.028 0.038;0.038 0.025;0.035 0.028"
+          dur="10s" repeatCount="indefinite"/>
+        <animate attributeName="seed"
+          values="4;9;2;7;4"
+          dur="16s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise"
+        scale="22" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+
+    <!-- Edge-refraction filter (subtle lens distortion at glass edge) -->
+    <filter id="edge-distort" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.065 0.04"
+        numOctaves="2" seed="3" result="t">
+        <animate attributeName="baseFrequency"
+          values="0.065 0.04;0.055 0.05;0.07 0.035;0.065 0.04"
+          dur="7s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="t"
+        scale="8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- Squircle clip paths — JS will update these -->
+    <clipPath id="sq-5" clipPathUnits="objectBoundingBox">
+      <path id="sq-path-5" d="M0.5,0L0.5,0Z"/>
+    </clipPath>
+    <clipPath id="sq-4" clipPathUnits="objectBoundingBox">
+      <path id="sq-path-4" d="M0.5,0L0.5,0Z"/>
+    </clipPath>
+    <clipPath id="sq-3" clipPathUnits="objectBoundingBox">
+      <path id="sq-path-3" d="M0.5,0L0.5,0Z"/>
+    </clipPath>
+    <clipPath id="sq-2" clipPathUnits="objectBoundingBox">
+      <path id="sq-path-2" d="M0.5,0L0.5,0Z"/>
+    </clipPath>
+    <clipPath id="sq-20" clipPathUnits="objectBoundingBox">
+      <path id="sq-path-20" d="M0.5,0L0.5,0Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
+<!-- Wallpaper + Bokeh -->
+<div class="wallpaper"></div>
+<div class="bokeh">
+  <div class="bokeh-dot bd1"></div>
+  <div class="bokeh-dot bd2"></div>
+  <div class="bokeh-dot bd3"></div>
+  <div class="bokeh-dot bd4"></div>
+</div>
+
+<div class="page">
+
+  <!-- Dynamic Island -->
+  <div class="dynamic-island">
+    <div class="di-dot"></div>
+    <div class="di-cam"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="eyebrow">iOS Liquid Glass · 真液态玻璃</div>
+    <h1>Liquid<br><em>Glass</em></h1>
+    <p>焦散光斑 · 鼠标视差高光 · 超椭圆 Squircle · 多层玻璃物理</p>
+  </header>
+
+  <!-- ── Navigation bar ── -->
+  <div class="label">Navigation Bar</div>
+  <div class="lg lg-interactive lg-nav" style="margin-bottom:40px">
+    <div class="nav-logo">✦ Glass</div>
+    <ul class="nav-links">
+      <li><a href="#">首页</a></li>
+      <li><a href="#">组件</a></li>
+      <li><a href="#">关于</a></li>
+    </ul>
+    <button class="nav-cta">下载</button>
+  </div>
+
+  <!-- ── Hero card ── -->
+  <div class="label">Hero Card</div>
+  <div class="lg lg-interactive hero-card" style="margin-bottom:16px">
+    <div class="hero-icon-wrap">
+      <div class="squircle-icon lg" data-squircle="5"
+           style="background:linear-gradient(135deg,#7b2ff7,#0ea5e9); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.5), 0 8px 30px rgba(123,47,247,0.4);">
+        ✦
+      </div>
+    </div>
+    <div class="hero-text">
+      <h2>真实玻璃物理</h2>
+      <p>苹果 iOS 液态玻璃的核心是多层叠加：毛玻璃底层 + 有机焦散光斑 + 视差高光 + 四方向边缘折射光。移动鼠标，感受光源随之流动。</p>
+      <div class="hero-tags">
+        <span class="tag-pill">backdrop-filter</span>
+        <span class="tag-pill">caustic shimmer</span>
+        <span class="tag-pill">specular parallax</span>
+        <span class="tag-pill">rim light</span>
+        <span class="tag-pill">squircle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Notifications ── -->
+  <div class="label" style="margin-top:40px">Notification Cards</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+    <div class="lg lg-interactive notif-card">
+      <div class="notif-icon ni-purple">💬</div>
+      <div class="notif-text">
+        <div class="notif-title">Messages</div>
+        <div class="notif-body">honala: 液态玻璃效果太好看了，直接上线！</div>
+      </div>
+      <div class="notif-time">刚刚</div>
+    </div>
+    <div class="lg lg-interactive notif-card">
+      <div class="notif-icon ni-blue">🌐</div>
+      <div class="notif-text">
+        <div class="notif-title">Safari</div>
+        <div class="notif-body">honala.xyz 已成功部署 · 访客 +120</div>
+      </div>
+      <div class="notif-time">2分钟</div>
+    </div>
+    <div class="lg lg-interactive notif-card">
+      <div class="notif-icon ni-green">✅</div>
+      <div class="notif-text">
+        <div class="notif-title">Reminders</div>
+        <div class="notif-body">把液态玻璃组件集成进 honala.xyz 主页</div>
+      </div>
+      <div class="notif-time">今天</div>
+    </div>
+  </div>
+
+  <!-- ── Widgets ── -->
+  <div class="label" style="margin-top:40px">Widgets</div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="lg lg-interactive widget-music">
+      <div class="music-header">
+        <div class="album-art"></div>
+        <div class="music-meta">
+          <div class="song">Neon Nights</div>
+          <div class="artist">The Glass Ensemble</div>
+        </div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill"></div>
+      </div>
+      <div class="music-controls">
+        <button class="ctrl-btn">⏮</button>
+        <button class="ctrl-play">▶</button>
+        <button class="ctrl-btn">⏭</button>
+      </div>
+    </div>
+    <div class="lg lg-interactive widget-weather">
+      <div class="weather-icon">⛅</div>
+      <div class="weather-temp">23<sup>°</sup></div>
+      <div class="weather-desc">多云转晴</div>
+      <div class="weather-row">
+        <div class="weather-item"><div class="wi-val">65%</div><div class="wi-key">湿度</div></div>
+        <div class="weather-item"><div class="wi-val">12km/h</div><div class="wi-key">风速</div></div>
+        <div class="weather-item"><div class="wi-val">高 28°</div><div class="wi-key">最高</div></div>
+        <div class="weather-item"><div class="wi-val">低 18°</div><div class="wi-key">最低</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Squircle Showcase ── -->
+  <div class="label" style="margin-top:40px">超椭圆 Superellipse ｜ |x/a|ⁿ + |y/b|ⁿ = 1</div>
+  <div class="lg squircle-showcase">
+    <div class="sq-item">
+      <div class="sq-shape" data-squircle="2" style="border-radius:50%">●</div>
+      <div class="sq-label">Circle<span>n = 2</span></div>
+    </div>
+    <div class="sq-item">
+      <div class="sq-shape" data-squircle="3">🌀</div>
+      <div class="sq-label">Soft<span>n = 3</span></div>
+    </div>
+    <div class="sq-item">
+      <div class="sq-shape" data-squircle="4">⭐</div>
+      <div class="sq-label">iOS-ish<span>n = 4</span></div>
+    </div>
+    <div class="sq-item">
+      <div class="sq-shape" data-squircle="5">✦</div>
+      <div class="sq-label" style="color:rgba(255,255,200,0.8)"><strong>iOS Exact</strong><span>n = 5 ← Apple</span></div>
+    </div>
+    <div class="sq-item">
+      <div class="sq-shape" data-squircle="20">◼</div>
+      <div class="sq-label">Almost Square<span>n = 20</span></div>
+    </div>
+  </div>
+
+  <!-- n-value annotation -->
+  <div class="grid-3" style="margin-bottom:16px">
+    <div class="lg n-annotation">
+      <div>
+        <div class="na-label">n = 3</div>
+        <div class="na-formula">|x|³ + |y|³ = 1</div>
+      </div>
+      <div class="na-preview" data-squircle="3"></div>
+    </div>
+    <div class="lg n-annotation">
+      <div>
+        <div class="na-label">n = 5 · Apple</div>
+        <div class="na-formula">|x|⁵ + |y|⁵ = 1</div>
+      </div>
+      <div class="na-preview" data-squircle="5"></div>
+    </div>
+    <div class="lg n-annotation">
+      <div>
+        <div class="na-label">n = 20</div>
+        <div class="na-formula">|x|²⁰ + |y|²⁰ = 1</div>
+      </div>
+      <div class="na-preview" data-squircle="20"></div>
+    </div>
+  </div>
+
+  <!-- ── Buttons ── -->
+  <div class="label" style="margin-top:40px">Buttons</div>
+  <div class="lg btn-row">
+    <button class="lg-btn lg-btn-glass lg-interactive"><span>✦ 液态玻璃</span></button>
+    <button class="lg-btn lg-btn-glass lg-interactive"><span>◈ Explore</span></button>
+    <button class="lg-btn lg-btn-white"><span>→ 开始使用</span></button>
+    <button class="lg-btn lg-btn-dark lg-interactive"><span>🔒 隐私优先</span></button>
+  </div>
+
+  <!-- ── Technique Breakdown ── -->
+  <div class="label" style="margin-top:40px">Glass Layer System · 玻璃层次拆解</div>
+  <div class="lg technique-card">
+    <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">6 层叠加 = 真实玻璃物理</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5)">每一层负责玻璃的一个物理属性，缺一不可</div>
+    <div class="tech-grid">
+      <div class="tech-item">
+        <div class="ti-title">① Backdrop Blur <span class="tech-badge">CSS</span></div>
+        <div class="ti-desc">blur(40px) saturate(200%) 冻结并增饱和背后内容，这是玻璃的基础</div>
+      </div>
+      <div class="tech-item">
+        <div class="ti-title">② White Tint <span class="tech-badge">CSS</span></div>
+        <div class="ti-desc">rgba(255,255,255,0.18) 白色底，给玻璃乳白质感，不要太透明</div>
+      </div>
+      <div class="tech-item">
+        <div class="ti-title">③ Caustic Shimmer <span class="tech-badge">SVG Filter</span></div>
+        <div class="ti-desc">feTurbulence 扰动白色高光，产生有机焦散光斑——这是液体感的核心</div>
+      </div>
+      <div class="tech-item">
+        <div class="ti-title">④ Specular Glare <span class="tech-badge">Mouse Parallax</span></div>
+        <div class="ti-desc">随鼠标位置移动的椭圆高光，模拟远处光源，移动鼠标即可感受</div>
+      </div>
+      <div class="tech-item">
+        <div class="ti-title">⑤ Rim Light <span class="tech-badge">inset box-shadow</span></div>
+        <div class="ti-desc">四方向边缘高光，上+左1.5px亮边模拟玻璃厚度折射，让玻璃"站"起来</div>
+      </div>
+      <div class="tech-item">
+        <div class="ti-title">⑥ Squircle Clip <span class="tech-badge">SVG clipPath</span></div>
+        <div class="ti-desc">JS计算超椭圆路径 n=5，通过 objectBoundingBox 应用到任意尺寸元素</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>iOS Liquid Glass · SVG Caustics · Squircle n=5 · Mouse Parallax</p>
+  </footer>
+
+</div>
+
+<script>
+/* ════════════════════════════════════
+   1. SQUIRCLE PATH GENERATOR
+   Superellipse: |x/a|^n + |y/b|^n = 1
+   Parametric:
+     x = 0.5 + 0.5 * sign(cos t) * |cos t|^(2/n)
+     y = 0.5 + 0.5 * sign(sin t) * |sin t|^(2/n)
+════════════════════════════════════ */
+function squirclePath(n, steps = 120) {
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    const ct = Math.cos(t), st = Math.sin(t);
+    const x = 0.5 + 0.5 * Math.sign(ct) * Math.pow(Math.abs(ct), 2 / n);
+    const y = 0.5 + 0.5 * Math.sign(st) * Math.pow(Math.abs(st), 2 / n);
+    pts.push(`${x.toFixed(5)},${y.toFixed(5)}`);
+  }
+  return `M ${pts[0]} L ${pts.slice(1).join(' L ')} Z`;
+}
+
+// Compute paths for all n values
+const nValues = [2, 3, 4, 5, 20];
+const paths = {};
+nValues.forEach(n => {
+  paths[n] = squirclePath(n);
+  const svgPath = document.getElementById(`sq-path-${n}`);
+  if (svgPath) svgPath.setAttribute('d', paths[n]);
+});
+
+// Apply clip-path CSS to all data-squircle elements
+document.querySelectorAll('[data-squircle]').forEach(el => {
+  const n = parseInt(el.dataset.squircle);
+  if (n === 2) {
+    // Circle — just use border-radius
+    el.style.borderRadius = '50%';
+    el.style.clipPath = '';
+  } else {
+    el.style.clipPath = `url(#sq-${n})`;
+    el.style.borderRadius = '0';
+  }
+});
+
+/* ════════════════════════════════════
+   2. GLOBAL SPECULAR PARALLAX
+   Light source moves with mouse —
+   ALL .lg elements update simultaneously,
+   like sunlight hitting multiple windows
+════════════════════════════════════ */
+let targetX = 30, targetY = 18;
+let currentX = 30, currentY = 18;
+let rafId = null;
+
+document.addEventListener('mousemove', (e) => {
+  const nx = e.clientX / window.innerWidth;
+  const ny = e.clientY / window.innerHeight;
+  // Light source sweeps from ~15% to ~55% horizontally, ~8% to ~30% vertically
+  targetX = 15 + nx * 40;
+  targetY = 8 + ny * 22;
+  if (!rafId) rafId = requestAnimationFrame(animateLight);
+});
+
+function animateLight() {
+  // Smooth lerp toward target
+  const ease = 0.07;
+  currentX += (targetX - currentX) * ease;
+  currentY += (targetY - currentY) * ease;
+
+  document.documentElement.style.setProperty('--spec-x', currentX.toFixed(2) + '%');
+  document.documentElement.style.setProperty('--spec-y', currentY.toFixed(2) + '%');
+
+  if (Math.abs(targetX - currentX) > 0.05 || Math.abs(targetY - currentY) > 0.05) {
+    rafId = requestAnimationFrame(animateLight);
+  } else {
+    rafId = null;
+  }
+}
+
+// Mobile: tilt-based parallax via DeviceMotion
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.gamma !== null && e.beta !== null) {
+      const nx = (e.gamma + 45) / 90;   // gamma: left-right tilt
+      const ny = (e.beta  + 45) / 90;   // beta: front-back tilt
+      targetX = 15 + Math.max(0, Math.min(1, nx)) * 40;
+      targetY = 8  + Math.max(0, Math.min(1, ny)) * 22;
+      if (!rafId) rafId = requestAnimationFrame(animateLight);
+    }
+  });
+}
+
+/* ════════════════════════════════════
+   3. ENTRANCE ANIMATION
+   Stagger cards into view
+════════════════════════════════════ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = entry.target.style.transform.replace('translateY(30px)', '') || '';
+        entry.target.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.23,1,0.32,1)';
+      }, 60 * (entry.target.dataset.idx || 0));
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.lg').forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = (el.style.transform || '') + ' translateY(24px)';
+  el.dataset.idx = i;
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

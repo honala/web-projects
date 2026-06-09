@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cloud.honala.xyz · 建设中</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cloud.honala.xyz/">
+<meta property="og:title" content="cloud.honala.xyz · 建设中">
+<meta property="og:description" content="绿联 NAS 节点 · 个人云存储基地（建设中）">
+<meta property="og:image" content="https://cloud.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="cloud.honala.xyz · 建设中">
+<meta name="twitter:image" content="https://cloud.honala.xyz/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;
+  --cyan:#00f5ff;
+  --gold:#d4a853;
+  --magenta:#ff2d78;
+  --green:#00ff9d;
+  --text:#c8d4e8;
+  --muted:#4a5568;
+  --border:rgba(255,255,255,0.07);
+}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-weight:300;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:100vh;
+  overflow:hidden;
+  position:relative;
+}
+
+/* ── canvas bg ── */
+#c{position:fixed;inset:0;z-index:0;opacity:0.5;pointer-events:none}
+
+/* ── scanlines ── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);
+}
+
+/* ── main content ── */
+.wrap{position:relative;z-index:2;text-align:center;padding:40px 24px;max-width:560px}
+
+.site-back{
+  font-size:9px;letter-spacing:0.25em;color:var(--muted);
+  text-decoration:none;display:inline-block;margin-bottom:48px;
+  border:1px solid var(--border);padding:6px 14px;border-radius:2px;
+  transition:all .2s;
+}
+.site-back:hover{color:var(--cyan);border-color:rgba(0,245,255,0.3)}
+
+.cloud-icon{
+  font-size:64px;margin-bottom:24px;display:block;
+  animation:float 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(0,245,255,0.3));
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.label{
+  font-size:9px;letter-spacing:0.35em;color:var(--gold);
+  text-transform:uppercase;margin-bottom:16px;
+}
+
+h1{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(22px,5vw,36px);font-weight:900;
+  color:#fff;letter-spacing:.04em;margin-bottom:8px;
+}
+h1 span{color:var(--cyan)}
+
+.sub{
+  font-size:11px;letter-spacing:0.12em;color:var(--muted);
+  margin-bottom:48px;line-height:1.8;
+}
+
+/* ── status panel ── */
+.panel{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border);
+  border-top:2px solid var(--gold);
+  border-radius:4px;padding:24px;
+  margin-bottom:32px;text-align:left;
+}
+.panel-title{font-size:8px;letter-spacing:0.3em;color:var(--gold);margin-bottom:20px;text-transform:uppercase}
+
+.status-row{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:14px;font-size:11px;
+}
+.status-row:last-child{margin-bottom:0}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.waiting{background:var(--muted);animation:pulse-muted 2s infinite}
+.dot.online{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-green 2s infinite}
+.dot.planned{background:var(--gold);opacity:0.6}
+@keyframes pulse-muted{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 4px var(--green)}50%{box-shadow:0 0 12px var(--green)}}
+.status-key{color:var(--muted);flex:0 0 120px}
+.status-val{color:var(--text)}
+.status-val.ok{color:var(--green)}
+.status-val.pending{color:var(--gold)}
+.status-val.na{color:var(--muted)}
+
+/* ── progress bar ── */
+.progress-wrap{
+  height:2px;background:rgba(255,255,255,0.05);
+  border-radius:2px;overflow:hidden;margin-bottom:8px;
+}
+.progress-fill{
+  height:100%;border-radius:2px;width:0%;
+  background:linear-gradient(to right,var(--gold),var(--cyan));
+  animation:fillBar 1.2s 0.3s ease forwards;
+}
+@keyframes fillBar{to{width:35%}}
+.progress-label{
+  display:flex;justify-content:space-between;
+  font-size:9px;color:var(--muted);letter-spacing:0.1em;
+}
+
+.footer-line{font-size:9px;color:var(--muted);letter-spacing:0.15em}
+.footer-line a{color:var(--cyan);text-decoration:none}
+.footer-line a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="wrap">
+  <a class="site-back" href="https://honala.xyz">← honala.xyz</a>
+
+  <span class="cloud-icon">☁️</span>
+  <div class="label">// NODE STATUS · cloud.honala.xyz</div>
+  <h1>CLOUD<span>.</span>HONALA</h1>
+  <p class="sub">绿联 NAS 节点 · 个人云存储基地<br>正在等待硬件落地，节点施工中</p>
+
+  <div class="panel">
+    <div class="panel-title">// DEPLOYMENT CHECKLIST</div>
+
+    <div class="status-row">
+      <div class="dot online"></div>
+      <span class="status-key">DNS 解析</span>
+      <span class="status-val ok">ONLINE</span>
+    </div>
+    <div class="status-row">
+      <div class="dot online"></div>
+      <span class="status-key">Cloudflare Tunnel</span>
+      <span class="status-val ok">CONFIGURED</span>
+    </div>
+    <div class="status-row">
+      <div class="dot waiting"></div>
+      <span class="status-key">绿联 NAS</span>
+      <span class="status-val pending">PENDING HARDWARE</span>
+    </div>
+    <div class="status-row">
+      <div class="dot planned"></div>
+      <span class="status-key">云存储服务</span>
+      <span class="status-val na">PLANNED</span>
+    </div>
+    <div class="status-row">
+      <div class="dot planned"></div>
+      <span class="status-key">私有同步</span>
+      <span class="status-val na">PLANNED</span>
+    </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-fill"></div></div>
+  <div class="progress-label"><span>建设进度</span><span id="pct">0%</span></div>
+
+  <br><br>
+  <div class="footer-line">
+    返回主站 <a href="https://honala.xyz">honala.xyz</a> &nbsp;·&nbsp;
+    AI 对话 <a href="https://chat.honala.xyz">chat.honala.xyz</a>
+  </div>
+</div>
+
+<script>
+// ── Canvas starfield ──
+const cv = document.getElementById('c');
+const cx = cv.getContext('2d');
+let W, H;
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const stars = Array.from({length:120},()=>({
+  x:Math.random()*1920, y:Math.random()*1080,
+  r:Math.random()*.8+.2,
+  base:Math.random()*.4+.1,
+  phase:Math.random()*Math.PI*2,
+  spd:Math.random()*.006+.002
+}));
+let f=0;
+(function loop(){
+  cx.clearRect(0,0,W,H);
+  f++;
+  stars.forEach(s=>{
+    const sx=(s.x/1920)*W, sy=(s.y/1080)*H;
+    const a = s.base + Math.sin(f*s.spd+s.phase)*0.15;
+    cx.beginPath(); cx.arc(sx,sy,s.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(180,210,255,${a})`; cx.fill();
+  });
+  requestAnimationFrame(loop);
+})();
+
+// ── Progress counter ──
+let pct=0;
+const $pct=document.getElementById('pct');
+const t=setInterval(()=>{
+  pct++;
+  $pct.textContent=pct+'%';
+  if(pct>=35) clearInterval(t);
+},28);
+</script>
+</body>
+</html>

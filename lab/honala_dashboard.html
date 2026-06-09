@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HONALA — Local AI Node</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lab.honala.xyz/" />
+  <meta property="og:title" content="honala · Lab" />
+  <meta property="og:description" content="本地 AI 节点与实验面板 · HONALA Lab" />
+  <meta property="og:image" content="https://lab.honala.xyz/favicon.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="honala · Lab" />
+  <meta name="twitter:image" content="https://lab.honala.xyz/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:     #060810;
+      --surface:#0b0f1a;
+      --border: rgba(0,229,255,0.1);
+      --border2: rgba(255,255,255,0.05);
+      --cyan:   #00e5ff;
+      --gold:   #d4a853;
+      --green:  #00d97e;
+      --red:    #ff4d6a;
+      --text:   #e6f1ff;
+      --sub:    #5a7080;
+      --sub2:   #8aa0b5;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box }
+
+    html { scroll-behavior:smooth }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    section { padding: 96px 0 0; }
+    section:last-of-type { padding-bottom: 96px; }
+
+    /* ── Typography ── */
+    .label {
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--sub);
+      margin-bottom: 10px;
+    }
+
+    h1, h2 {
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 0.06em;
+      font-weight: 400;
+    }
+
+    h1 { font-size: 52px; color: var(--text); line-height: 1 }
+    h2 { font-size: 18px; color: var(--text); margin-bottom: 32px }
+
+    /* ── Divider ── */
+    .div {
+      border: none;
+      height: 1px;
+      background: var(--border2);
+      margin: 96px 0 0;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .hero-accent {
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      color: var(--cyan);
+      margin-bottom: 28px;
+      opacity: 0.7;
+    }
+
+    .hero-name { margin-bottom: 20px }
+
+    .hero-desc {
+      color: var(--sub2);
+      font-size: 12px;
+      max-width: 440px;
+      line-height: 1.9;
+    }
+
+    .hero-links {
+      margin-top: 36px;
+      display: flex;
+      gap: 24px;
+    }
+
+    .hero-link {
+      font-size: 11px;
+      color: var(--sub);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color .2s;
+      padding-bottom: 2px;
+      border-bottom: 1px solid transparent;
+    }
+
+    .hero-link:hover { color: var(--cyan); border-color: var(--cyan) }
+
+    /* ── NODE DASHBOARD ── */
+    .dashboard {
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    /* top bar */
+    .db-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(0,229,255,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .db-title {
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      color: var(--sub);
+      text-transform: uppercase;
+    }
+
+    .db-refresh {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9px;
+      color: var(--sub);
+    }
+
+    .refresh-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--sub);
+    }
+    .refresh-dot.spinning {
+      background: var(--cyan);
+      animation: pulse-cyan 0.8s ease infinite;
+    }
+
+    @keyframes pulse-cyan {
+      0%,100% { opacity:1; transform:scale(1) }
+      50%      { opacity:0.4; transform:scale(0.7) }
+    }
+
+    /* status row */
+    .db-status-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .db-stat {
+      padding: 20px 20px;
+      border-right: 1px solid var(--border2);
+    }
+    .db-stat:last-child { border-right: none }
+
+    .db-stat-label {
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      color: var(--sub);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .db-stat-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* status dot */
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: glow-green 2s ease infinite }
+    .status-dot.offline { background: var(--red) }
+
+    @keyframes glow-green {
+      0%,100% { box-shadow: 0 0 4px var(--green) }
+      50%      { box-shadow: 0 0 10px var(--green), 0 0 20px rgba(0,217,126,0.3) }
+    }
+
+    /* loaded model row */
+    .db-loaded {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border2);
+      min-height: 56px;
+    }
+
+    .db-loaded-label {
+      width: 120px;
+      flex-shrink: 0;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      color: var(--sub);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-right: 1px solid var(--border2);
+    }
+
+    .db-loaded-content {
+      flex: 1;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .db-loaded-name {
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .db-loaded-meta {
+      font-size: 10px;
+      color: var(--sub2);
+      display: flex;
+      gap: 20px;
+    }
+
+    .db-loaded-idle {
+      font-size: 11px;
+      color: var(--sub);
+      font-style: italic;
+    }
+
+    /* vram bar */
+    .vram-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .vram-bar {
+      width: 80px; height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .vram-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(to right, var(--cyan), var(--gold));
+      transition: width 0.6s ease;
+    }
+
+    /* expires countdown */
+    .db-expires {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--sub);
+      white-space: nowrap;
+    }
+
+    /* models table */
+    .db-models-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .db-models-header-label {
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      color: var(--sub);
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .db-model-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 80px 90px;
+      align-items: center;
+      padding: 11px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background .15s;
+    }
+    .db-model-row:last-child { border-bottom: none }
+    .db-model-row:hover { background: rgba(0,229,255,0.025) }
+
+    .db-model-name { font-size: 12px; color: var(--text) }
+
+    .db-model-cell {
+      font-size: 11px;
+      color: var(--sub2);
+      text-align: right;
+    }
+
+    .db-model-status {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 10px;
+    }
+
+    .db-model-status.running { color: var(--green) }
+    .db-model-status.idle    { color: var(--sub) }
+
+    /* empty / error states */
+    .db-empty {
+      padding: 28px 20px;
+      font-size: 11px;
+      color: var(--sub);
+      text-align: center;
+    }
+
+    /* flash on update */
+    @keyframes flash-update {
+      0%   { background: rgba(0,229,255,0.06) }
+      100% { background: transparent }
+    }
+    .db-flash { animation: flash-update 0.5s ease }
+
+    /* ── ABOUT grid ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .about-text {
+      font-size: 13px;
+      line-height: 1.95;
+      color: var(--sub2);
+    }
+
+    .about-text strong { color: var(--text); font-weight: 400 }
+
+    .sys-card {
+      border: 1px solid var(--border2);
+      border-top: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .sys-card-header {
+      padding: 10px 16px;
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      color: var(--sub);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border2);
+      background: rgba(0,229,255,0.02);
+    }
+
+    .sys-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 11px;
+    }
+    .sys-row:last-child { border-bottom: none }
+
+    .sys-key { color: var(--sub); letter-spacing: 0.05em }
+    .sys-val { color: var(--text) }
+
+    /* ── ARSENAL ── */
+    .arsenal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--border2);
+    }
+
+    .ars-card {
+      background: var(--surface);
+      padding: 28px 24px;
+    }
+
+    .ars-label {
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+
+    .ars-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .ars-desc {
+      font-size: 11px;
+      color: var(--sub2);
+      line-height: 1.8;
+    }
+
+    /* ── LINKS ── */
+    .links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .link-card {
+      display: block;
+      text-decoration: none;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      padding: 20px 20px;
+      transition: border-color .2s, background .2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .link-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--cyan);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .25s ease;
+    }
+
+    .link-card:hover { border-color: var(--border); background: rgba(0,229,255,0.025) }
+    .link-card:hover::before { transform: scaleX(1) }
+
+    .link-card-label {
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      color: var(--sub);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .link-card-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .link-card-url {
+      font-size: 10px;
+      color: var(--cyan);
+      opacity: 0.6;
+    }
+
+    .link-card-desc {
+      font-size: 11px;
+      color: var(--sub);
+      margin-top: 8px;
+      line-height: 1.7;
+    }
+
+    .link-card-disabled {
+      opacity: 0.35;
+      cursor: default;
+      border-style: dashed;
+    }
+    .link-card-disabled:hover { border-color: var(--border2); background: none }
+    .link-card-disabled:hover::before { transform: none }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border2);
+      padding: 32px 0;
+      margin-top: 96px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-left {
+      font-size: 10px;
+      color: var(--sub);
+      letter-spacing: 0.15em;
+    }
+
+    .footer-right {
+      font-size: 10px;
+      color: var(--sub);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .wrap { padding: 0 24px }
+      h1 { font-size: 36px }
+      .db-status-row { grid-template-columns: 1fr 1fr }
+      .about-grid { grid-template-columns: 1fr }
+      .arsenal-grid { grid-template-columns: 1fr }
+      .links-grid { grid-template-columns: 1fr }
+      .db-model-row { grid-template-columns: 1fr 70px 80px }
+      .db-model-row > .db-model-cell:nth-child(3) { display: none }
+      .footer-inner { flex-direction: column; gap: 8px; text-align: center }
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+    <div class="hero-accent">// NODE · honala.xyz</div>
+    <h1 class="hero-name">HONALA</h1>
+    <p class="hero-desc">
+      Running private intelligence on consumer hardware.<br>
+      No cloud subscription. No data upload. Full local control.
+    </p>
+    <nav class="hero-links">
+      <a class="hero-link" href="index.html">Lab 目录</a>
+      <a class="hero-link" href="https://chat.honala.xyz">chat.honala.xyz</a>
+      <a class="hero-link" href="https://photos.honala.xyz">photos.honala.xyz</a>
+      <a class="hero-link" href="mailto:hi@honala.xyz">hi@honala.xyz</a>
+    </nav>
+  </section>
+
+  <hr class="div">
+
+  <!-- ══ NODE STATUS DASHBOARD ══ -->
+  <section>
+    <div class="label">Node Status</div>
+    <h2>Live · AI 节点监控</h2>
+
+    <div class="dashboard" id="dashboard">
+
+      <!-- top bar -->
+      <div class="db-topbar">
+        <span class="db-title">honala@nightcity — Ollama Runtime</span>
+        <div class="db-refresh">
+          <div class="refresh-dot" id="refresh-dot"></div>
+          <span id="refresh-label">—</span>
+        </div>
+      </div>
+
+      <!-- stat tiles -->
+      <div class="db-status-row" id="stat-row">
+        <div class="db-stat">
+          <div class="db-stat-label">Status</div>
+          <div class="db-stat-value" id="stat-status">
+            <div class="status-dot offline" id="status-dot"></div>
+            <span id="stat-status-text">—</span>
+          </div>
+        </div>
+        <div class="db-stat">
+          <div class="db-stat-label">Ping</div>
+          <div class="db-stat-value" id="stat-ping">—</div>
+        </div>
+        <div class="db-stat">
+          <div class="db-stat-label">Models</div>
+          <div class="db-stat-value" id="stat-models">—</div>
+        </div>
+        <div class="db-stat">
+          <div class="db-stat-label">Updated</div>
+          <div class="db-stat-value" id="stat-updated" style="font-size:12px;color:var(--sub2)">—</div>
+        </div>
+      </div>
+
+      <!-- loaded model -->
+      <div class="db-loaded">
+        <div class="db-loaded-label">Loaded</div>
+        <div class="db-loaded-content" id="loaded-content">
+          <span class="db-loaded-idle">—</span>
+        </div>
+      </div>
+
+      <!-- models table -->
+      <div class="db-models-header">
+        <span class="db-models-header-label">Available Models</span>
+        <span style="font-size:9px;color:var(--sub);letter-spacing:0.15em">NAME</span>
+        <span style="font-size:9px;color:var(--sub);letter-spacing:0.15em;margin-left:32px">SIZE</span>
+        <span style="font-size:9px;color:var(--sub);letter-spacing:0.15em;margin-left:28px">VRAM</span>
+        <span style="font-size:9px;color:var(--sub);letter-spacing:0.15em;margin-left:16px">STATUS</span>
+      </div>
+      <div id="model-list">
+        <div class="db-empty">Connecting to node…</div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="div">
+
+  <!-- ══ ABOUT ══ -->
+  <section>
+    <div class="label">About</div>
+    <h2>系统档案</h2>
+
+    <div class="about-grid">
+      <div class="about-text">
+        <p>代号 <strong>honala</strong>，在钢铁与硅基的夹缝里折腾服务器。</p>
+        <br>
+        <p>
+          本机跑着一台 <strong>RTX 4070</strong> 驱动的本地 AI，没有云订阅，
+          没有数据上传，只有在自己的神经网络里低语的模型。
+          通过 <strong>Cloudflare Tunnel</strong> 暴露服务，零公网 IP 暴露。
+        </p>
+        <br>
+        <p>
+          白天折腾自建基础设施，晚上在夜之城的霓虹雨中打滚，
+          或者在费伦大陆扮演一个做出糟糕选择的冒险者。
+        </p>
+      </div>
+
+      <div class="sys-card">
+        <div class="sys-card-header">System</div>
+        <div class="sys-row"><span class="sys-key">GPU</span><span class="sys-val">RTX 4070 · 12GB</span></div>
+        <div class="sys-row"><span class="sys-key">AI Runtime</span><span class="sys-val">Ollama</span></div>
+        <div class="sys-row"><span class="sys-key">OS</span><span class="sys-val">Windows + WSL2</span></div>
+        <div class="sys-row"><span class="sys-key">Network</span><span class="sys-val">Cloudflare Tunnel</span></div>
+        <div class="sys-row"><span class="sys-key">Domain</span><span class="sys-val">honala.xyz</span></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div">
+
+  <!-- ══ ARSENAL ══ -->
+  <section>
+    <div class="label">Arsenal</div>
+    <h2>技术栈</h2>
+
+    <div class="arsenal-grid">
+      <div class="ars-card">
+        <div class="ars-label">Local AI</div>
+        <div class="ars-title">Inference Stack</div>
+        <div class="ars-desc">Ollama 本地推理，支持多模型切换，流式输出，无审查。Qwen3 系列为主力模型。</div>
+      </div>
+      <div class="ars-card">
+        <div class="ars-label">Infrastructure</div>
+        <div class="ars-title">Self-Hosted Network</div>
+        <div class="ars-desc">Nginx 反向代理 + Cloudflare Tunnel，零公网 IP 暴露，多子域路由，WAF 防护。</div>
+      </div>
+      <div class="ars-card">
+        <div class="ars-label">Data</div>
+        <div class="ars-title">Private Storage</div>
+        <div class="ars-desc">本地相册系统 photos.honala.xyz，私有存档，不依赖任何第三方云存储服务。</div>
+      </div>
+      <div class="ars-card">
+        <div class="ars-label">Tooling</div>
+        <div class="ars-title">Dev Environment</div>
+        <div class="ars-desc">Docker 容器化，Git 版本控制，Windows + WSL2 混合开发环境，Cherry Studio 管理界面。</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div">
+
+  <!-- ══ LINKS ══ -->
+  <section>
+    <div class="label">Network</div>
+    <h2>接入节点</h2>
+
+    <div class="links-grid">
+      <a class="link-card" href="https://chat.honala.xyz">
+        <div class="link-card-label">Chat</div>
+        <div class="link-card-name">LOCAL AI</div>
+        <div class="link-card-url">chat.honala.xyz</div>
+        <div class="link-card-desc">Qwen3 · RTX 4070 · 本地推理，无审查，流式输出。</div>
+      </a>
+      <a class="link-card" href="https://photos.honala.xyz">
+        <div class="link-card-label">Archive</div>
+        <div class="link-card-name">PHOTO ARCHIVE</div>
+        <div class="link-card-url">photos.honala.xyz</div>
+        <div class="link-card-desc">私有相册，加密访问，朋友黑历史永久存档。</div>
+      </a>
+      <a class="link-card" href="mailto:hi@honala.xyz">
+        <div class="link-card-label">Mail</div>
+        <div class="link-card-name">CONTACT</div>
+        <div class="link-card-url">hi@honala.xyz</div>
+        <div class="link-card-desc">直接联系，邮件路由到本地。</div>
+      </a>
+      <a class="link-card" href="ios-liquid-glass.html">
+        <div class="link-card-label">UI Lab</div>
+        <div class="link-card-name">LIQUID GLASS</div>
+        <div class="link-card-url">ios-liquid-glass.html</div>
+        <div class="link-card-desc">iOS 风格液态玻璃：backdrop-filter、SVG 焦散、鼠标视差高光、squircle。</div>
+      </a>
+      <a class="link-card" href="glass-effects.html">
+        <div class="link-card-label">UI Lab</div>
+        <div class="link-card-name">GLASS MORPHISM</div>
+        <div class="link-card-url">glass-effects.html</div>
+        <div class="link-card-desc">玻璃美学：拟态卡片与动态光球背景。</div>
+      </a>
+      <a class="link-card" href="honala-homepage.html">
+        <div class="link-card-label">UI Lab</div>
+        <div class="link-card-name">HONALA HOME</div>
+        <div class="link-card-url">honala-homepage.html</div>
+        <div class="link-card-desc">honala 个人节点风格首页稿。</div>
+      </a>
+    </div>
+  </section>
+
+</div><!-- /wrap -->
+
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <span class="footer-left">HONALA NODE · honala.xyz</span>
+      <span class="footer-right">BUILT LOCAL · POWERED BY RTX 4070</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ── CONFIG ──────────────────────────────────────────────────────
+   如果 dashboard 部署在 honala.xyz 上而非 chat.honala.xyz，
+   需要把 OLLAMA_BASE 改成你 Ollama API 的完整地址，
+   或者在 nginx 里把 /api/ 代理到本地 Ollama。
+   ──────────────────────────────────────────────────────────── */
+const OLLAMA_BASE    = '';          // 留空 = 同域相对路径
+const REFRESH_MS     = 15000;       // 刷新间隔 ms
+const MAX_VRAM_GB    = 12;          // RTX 4070 VRAM 上限
+
+/* ── Helpers ── */
+function fmt(bytes){ return bytes ? (bytes/1e9).toFixed(1)+'GB' : '—' }
+
+function timeAgo(d){
+  const s = Math.floor((new Date()-new Date(d))/1000);
+  if(s < 60) return s+'s ago';
+  if(s < 3600) return Math.floor(s/60)+'m ago';
+  return Math.floor(s/3600)+'h ago';
+}
+
+function expiresIn(d){
+  const s = Math.floor((new Date(d)-new Date())/1000);
+  if(s <= 0) return 'expiring';
+  if(s < 60) return s+'s';
+  return Math.floor(s/60)+'m '+Math.floor(s%60)+'s';
+}
+
+function nowStr(){
+  return new Date().toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+/* ── Fetch ── */
+async function fetchOllama(){
+  const t0 = Date.now();
+  const [tagsRes, psRes] = await Promise.all([
+    fetch(OLLAMA_BASE+'/api/tags'),
+    fetch(OLLAMA_BASE+'/api/ps').catch(()=>null),
+  ]);
+  const ms = Date.now()-t0;
+  if(!tagsRes.ok) throw new Error('HTTP '+tagsRes.status);
+  const tags = await tagsRes.json();
+  const ps   = psRes?.ok ? await psRes.json() : { models:[] };
+  return { ms, models: tags.models||[], loaded: ps.models||[] };
+}
+
+/* ── Render ── */
+function render(data, online){
+  const dot     = document.getElementById('status-dot');
+  const statTxt = document.getElementById('stat-status-text');
+  const statPing= document.getElementById('stat-ping');
+  const statMod = document.getElementById('stat-models');
+  const statUpd = document.getElementById('stat-updated');
+  const loaded  = document.getElementById('loaded-content');
+  const list    = document.getElementById('model-list');
+
+  // flash
+  const db = document.getElementById('dashboard');
+  db.classList.remove('db-flash');
+  void db.offsetWidth;
+  db.classList.add('db-flash');
+
+  if(!online){
+    dot.className      = 'status-dot offline';
+    statTxt.textContent= 'OFFLINE';
+    statTxt.style.color= 'var(--red)';
+    statPing.textContent='—';
+    statMod.textContent ='—';
+    statUpd.textContent = nowStr();
+    loaded.innerHTML    = '<span class="db-loaded-idle">node offline — run <span style="color:var(--cyan)">ollama serve</span></span>';
+    list.innerHTML      = '<div class="db-empty">无法连接到 Ollama，请检查节点是否在线</div>';
+    return;
+  }
+
+  // online
+  dot.className      = 'status-dot online';
+  statTxt.textContent= 'ONLINE';
+  statTxt.style.color= 'var(--green)';
+  statPing.textContent= data.ms+'ms';
+  statPing.style.color= data.ms < 30 ? 'var(--green)' : data.ms < 100 ? 'var(--text)' : 'var(--gold)';
+  statMod.textContent = data.models.length;
+  statUpd.textContent = nowStr();
+
+  // loaded model
+  const loadedSet = new Set(data.loaded.map(m=>m.name));
+  if(data.loaded.length > 0){
+    const m = data.loaded[0];
+    const vramPct = m.size_vram ? Math.round(m.size_vram/1e9/MAX_VRAM_GB*100) : null;
+    loaded.innerHTML = `
+      <div class="db-loaded-name">${m.name}</div>
+      <div class="db-loaded-meta">
+        ${m.size_vram ? `
+        <div class="vram-wrap">
+          <div class="vram-bar"><div class="vram-fill" style="width:${vramPct}%"></div></div>
+          <span>${fmt(m.size_vram)} VRAM</span>
+        </div>` : ''}
+        ${m.size ? `<span>${fmt(m.size)} total</span>` : ''}
+      </div>
+      ${m.expires_at ? `<div class="db-expires">expires in ${expiresIn(m.expires_at)}</div>` : ''}
+    `;
+  } else {
+    loaded.innerHTML = '<span class="db-loaded-idle">idle — no model currently loaded</span>';
+  }
+
+  // models list
+  if(data.models.length === 0){
+    list.innerHTML = '<div class="db-empty">No models found — run <span style="color:var(--cyan)">ollama pull &lt;model&gt;</span></div>';
+    return;
+  }
+
+  list.innerHTML = data.models.map(m => {
+    const isRunning = loadedSet.has(m.name);
+    const vramM = isRunning ? data.loaded.find(l=>l.name===m.name) : null;
+    return `
+    <div class="db-model-row">
+      <div class="db-model-name">${m.name}</div>
+      <div class="db-model-cell">${fmt(m.size)}</div>
+      <div class="db-model-cell">${vramM?.size_vram ? fmt(vramM.size_vram) : '—'}</div>
+      <div class="db-model-status ${isRunning?'running':'idle'}">
+        <div class="status-dot ${isRunning?'online':'offline'}" style="${isRunning?'':'background:var(--sub);box-shadow:none'}"></div>
+        ${isRunning ? 'running' : 'idle'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Refresh loop ── */
+const rdot  = document.getElementById('refresh-dot');
+const rlbl  = document.getElementById('refresh-label');
+let countdown = 0;
+let timer;
+
+async function refresh(){
+  rdot.className = 'refresh-dot spinning';
+  rlbl.textContent = 'updating…';
+  clearInterval(timer);
+
+  try {
+    const data = await fetchOllama();
+    render(data, true);
+  } catch(e) {
+    render(null, false);
+  }
+
+  rdot.className = 'refresh-dot';
+  countdown = Math.round(REFRESH_MS/1000);
+  timer = setInterval(() => {
+    countdown--;
+    rlbl.textContent = 'next in '+countdown+'s';
+    if(countdown <= 0){ clearInterval(timer); refresh(); }
+  }, 1000);
+}
+
+refresh();
+</script>
+
+</body>
+</html>
