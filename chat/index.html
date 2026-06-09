@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AI Chat</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://chat.honala.xyz/">
+<meta property="og:title" content="honala · AI Chat">
+<meta property="og:description" content="本地 Ollama 驱动的 AI 对话 · RTX 4070">
+<meta property="og:image" content="https://chat.honala.xyz/favicon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="honala · AI Chat">
+<meta name="twitter:image" content="https://chat.honala.xyz/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" disabled>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+window.MathJax = {
+  loader: { load: ['[tex]/noerrors','[tex]/ams'] },
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    processEscapes: true, processEnvironments: true, processRefs: false,
+    packages: {'[+]': ['noerrors','ams']},
+    tags: 'ams'
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
+<link rel="stylesheet" href="chat.css?v=22">
+<link rel="preload" href="tabler-icons.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tabler-icons.min.css">
+</head>
+<body>
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+<div id="app">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="hdr-left">
+      <span class="logo-text">honala</span>
+      <span class="logo-slash">/</span>
+      <span class="logo-sub">chat</span>
+    </div>
+    <div class="hdr-right">
+      <div class="persona-wrap">
+        <button class="persona-btn active" data-persona="default"><i class="ti ti-robot icon-md"></i> 助手</button>
+        <button class="persona-btn"        data-persona="neko"><i class="ti ti-cat icon-md"></i> 猫娘</button>
+      </div>
+      <button class="hdr-btn" id="export-btn" title="导出会话为 Markdown"><i class="ti ti-markdown icon-md"></i> MD</button>
+      <button class="hdr-btn" id="music-btn" title="背景音乐"><i class="ti ti-music icon-md"></i></button>
+      <button id="api-settings-btn" title="设置"><i class="ti ti-settings icon-md"></i></button>
+      <button class="hdr-btn hdr-danger" id="clear-btn" title="Ctrl+K"><i class="ti ti-trash icon-md"></i> 清空</button>
+    </div>
+  </header>
+
+  <!-- ── API SETTINGS MODAL ── -->
+  <div class="settings-overlay" id="settings-overlay" style="display:none">
+    <div class="settings-panel" id="settings-panel"></div>
+  </div>
+
+  <audio id="bg-audio" loop></audio>
+  <div id="session-bar"></div>
+  <div id="app-banner"></div>
+  <div id="messages-wrap"><div id="messages"></div><button id="scroll-down-btn" title="滚动到底部">↓</button></div>
+
+  <!-- ── Suggestion Chips ── -->
+  <div id="suggestion-chips">
+    <button class="suggestion-chip" data-category="code"><i class="ti ti-code chip-icon"></i>Code</button>
+    <button class="suggestion-chip" data-category="visual"><i class="ti ti-chart-bubble chip-icon"></i>Visual</button>
+    <button class="suggestion-chip" data-category="explain"><i class="ti ti-bulb chip-icon"></i>Explain</button>
+  </div>
+  <div id="suggestion-submenu" class="suggestion-submenu"></div>
+
+  <!-- ── INPUT AREA (floating) ── -->
+  <div id="input-area">
+    <div id="image-preview-strip"></div>
+    <div class="input-body">
+      <textarea id="user-input" placeholder="输入消息…" rows="1"></textarea>
+    </div>
+    <div class="input-bar">
+      <div class="input-bar-left">
+        <button class="tool-btn" id="tb-plus" title="更多"><i class="ti ti-plus"></i></button>
+        <button class="tool-btn" id="tb-mic" title="语音输入"><i class="ti ti-microphone"></i></button>
+        <div class="status-pills" id="status-pills"></div>
+      </div>
+      <input type="file" id="img-file" accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx,.ppt,.pptx,.json,.xml,.html,.htm,.py,.js,.ts,.java,.c,.cpp,.h,.go,.rs,.rb,.php,.swift,.kt,.r,.sql" multiple>
+      <input type="file" id="gallery-file" accept="image/*" multiple style="display:none">
+      <div class="model-pill" id="model-select" tabindex="0" title="选择模型">
+        <div class="model-dot"></div>
+        <span class="model-name">加载中...</span>
+        <span class="model-chevron">▾</span>
+      </div>
+      <button id="send-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="input-footer">
+    <span class="hint hint-desktop">Enter 发送 · Shift+Enter 换行 · Ctrl+K 清空 · Esc 停止</span>
+  </div>
+
+  <div class="model-dropdown" id="model-dropdown" style="display:none"></div>
+  <div class="tool-menu" id="tool-menu" style="display:none">
+    <button class="tool-menu-item" id="tb-gallery"><i class="ti ti-photo"></i> 上传图片</button>
+    <button class="tool-menu-item" id="tb-img-gen"><i class="ti ti-palette"></i> 图片生成</button>
+    <button class="tool-menu-item" id="tb-vid-gen"><i class="ti ti-video"></i> 视频生成</button>
+    <button class="tool-menu-item" id="tb-file"><i class="ti ti-paperclip"></i> 上传文件</button>
+  </div>
+
+</div><!-- /#app -->
+
+<script src="chat.js?v=23"></script>
+</body>
+</html>
